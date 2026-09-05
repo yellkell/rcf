@@ -169,7 +169,7 @@ export class PaintSystem extends createSystem({}) {
     // To your left of the robot, as you see it.
     _side.set(_head.x - _p.x, 0, _head.z - _p.z).normalize();
     _side.set(_side.z, 0, -_side.x); // rotate 90°: your left
-    const y = Math.max(_p.y + 0.15, 0.7);
+    const y = Math.max(_p.y + 0.1, 0.7);
     this.tray.group.position.set(_p.x + _side.x * 0.55, y + 0.25, _p.z + _side.z * 0.55);
     this.tray.group.lookAt(_head.x, y + 0.25, _head.z);
   }

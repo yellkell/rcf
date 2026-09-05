@@ -45,27 +45,31 @@ everything, the places.
   walkable floor, release to step there with a quick fade. Snap turn on
   thumbstick x. Nothing smooth, nothing that makes anyone ill.
 - **THE COMPANION** stands ~0.9 m in front of you, on the floor, facing you,
-  and walks (legs!) to keep station as you teleport — it arrives a beat
+  and walks to keep station as you teleport — it arrives a beat
   after you do. Point at it and hold the wheel button: the **pose wheel**
   fans out around it (STAND · SIT · LIE · CROUCH · FLATTEN · CLING · PERISCOPE).
   Pick a pose, it does it, on the spot, where it stands.
 - **Carry**: grip it and it rides your hand (its legs tuck). Release over
   a floor, it lands and stands; release against a wall or ceiling, it
-  **sticks** — legs splayed, body flat to the surface, the CLING pose on
+  **sticks** — spread-eagle, face to the surface, the CLING pose on
   whatever normal you gave it.
 - **Paint bay**: FF2's bay, verbatim in spirit — take a unit from the tray,
-  sweep the ray over the robot, twist and size with the stick, trigger to
+  sweep the ray over the little guy, twist and size with the stick, trigger to
   place, squeeze to lift, B to return. The bay is a mode on the companion
   itself: you paint it where it stands, in the light it will hide in.
 
 ## The character
 
-A little robot — head, body, four short legs, a stub of a tail-fin — built
-from FF2's lofted rings so every surface has the same seam-safe cylindrical
-UVs the paint needs. ~0.45 m tall standing. The cuttlefish in the name is
-the paint (cuttlefish match their backdrop); the chameleon is the eyes,
-two turret domes that track you. Poses are procedural: a dictionary of
-joint angles per pose, tweened, no skeletons, no GLBs.
+THE LITTLE GUY: FIRE FIGHT 2's blank, with legs. The egg head and the one
+body loft are ff2's mannequin verbatim — the same rings, the same
+seam-safe cylindrical UVs the paint needs — and this one gains two arms
+(shoulder, elbow, hand) and two legs (hip, knee, foot), each segment a
+small loft and a paint surface, with dark steel joints that never paint.
+Authored at human size and scaled to about 0.6 m, so it is a person you
+can pick up. The cuttlefish in the name is the paint (cuttlefish match
+their backdrop); the chameleon is the eyes, two turret domes on the head
+that track you. Poses are procedural: a record of joint angles per pose,
+tweened, no skeletons, no GLBs.
 
 ## The look
 

@@ -16,9 +16,12 @@ const views = [
   ['garden-greenhouse', 'place=garden&x=0&z=-1&yaw=-0.5&pitch=-0.05&rx=1.4&rz=-3.2&pose=periscope'],
   ['garden-pond', 'place=garden&x=0.5&z=2&yaw=-1.0&pitch=-0.2&rx=1.9&rz=0.2&pose=lie'],
   ['garden-bench', 'place=garden&x=-1&z=2.6&yaw=1.0&pitch=-0.15&rx=-2.8&rz=4.1&pose=crouch'],
-  ['robot-closeup', 'place=garden&x=-0.8&y=0.7&z=3.1&yaw=0&pitch=-0.35&rx=-0.8&rz=2.2&ry=3.6&pose=stand'],
-  ['robot-flatten', 'place=garden&x=-0.8&y=0.6&z=3.1&yaw=0&pitch=-0.35&rx=-0.8&rz=2.2&ry=2.6&pose=flatten'],
-  ['robot-sit', 'place=garden&x=-0.8&y=0.7&z=3.1&yaw=0&pitch=-0.35&rx=-0.8&rz=2.2&ry=2.4&pose=sit'],
+  ['robot-closeup', 'place=garden&x=-0.8&y=0.8&z=3.3&yaw=0&pitch=-0.3&rx=-0.8&rz=2.2&ry=3.4&pose=stand'],
+  ['robot-lie', 'place=garden&x=-0.8&y=0.8&z=3.3&yaw=0&pitch=-0.35&rx=-0.8&rz=2.2&ry=2.4&pose=lie'],
+  ['robot-crouch', 'place=garden&x=-0.8&y=0.8&z=3.3&yaw=0&pitch=-0.3&rx=-0.8&rz=2.2&ry=3.4&pose=crouch'],
+  ['robot-periscope', 'place=garden&x=-0.8&y=0.8&z=3.3&yaw=0&pitch=-0.2&rx=-0.8&rz=2.2&ry=3.4&pose=periscope'],
+  ['robot-flatten', 'place=garden&x=-0.8&y=0.8&z=3.3&yaw=0&pitch=-0.35&rx=-0.8&rz=2.2&ry=2.6&pose=flatten'],
+  ['robot-sit', 'place=garden&x=-0.8&y=0.8&z=3.3&yaw=0&pitch=-0.35&rx=-0.8&rz=2.2&ry=3.4&pose=sit'],
 ];
 
 try {

@@ -1,7 +1,8 @@
 # ROBOT CUTTLEFISH 🐙🤖
 
-WebXR hide-and-seek with a little paintable robot. You are a head and two
-hands; the robot walks in front of you. Paint it to match the world, pose
+WebXR hide-and-seek with a little paintable robot — FIRE FIGHT 2's blank
+body, given arms and legs. You are a head and two hands; the little guy
+walks in front of you. Paint it to match the world, pose
 it from a wheel, carry it, stick it to a wall, leave it somewhere clever.
 Built on Meta's [Immersive Web SDK](https://iwsdk.dev/) (Three.js + ECS)
 from the technology of FIRE FIGHT 2 — the blank body and its paint, the
@@ -50,9 +51,9 @@ src/
     CompanionSystem.ts       station-keeping, the gait, the wheel, carry, stick, eyes
     PaintSystem.ts           the bay: tray panel + ray→uv place/lift/ghost on the robot
   companion/
-    body.ts                  the lofted robot: mantle, head, 4 legs, fins, eye turrets
+    body.ts                  ff2's blank (egg head + one body loft) with arms and legs, eye turrets
     poses.ts                 the seven poses as joint records
-    rig.ts                   pose → groups, the trot
+    rig.ts                   pose → groups, the walk
     paint.ts                 Look model, 8-byte wire, THE HAND, the canvas bake
   env/
     place.ts                 the Place contract every environment meets

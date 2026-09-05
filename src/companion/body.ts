@@ -1,42 +1,22 @@
 /**
- * THE ROBOT — the blank cuttlefish, built the way FIRE FIGHT 2 builds its
- * blank (ff2/src/avatar/mannequin.ts): lofted rings stitched into one
- * smooth indexed surface with seam-safe cylindrical UVs, so every shell is
- * a paint surface the bake can wrap a stripe around.
+ * THE LITTLE GUY — FIRE FIGHT 2's blank, with legs.
  *
- * The plan (front is −z, like the camera; the robot FACES you):
+ * The body is ff2's mannequin verbatim (ff2/src/avatar/mannequin.ts): a
+ * bare egg for a head, and ONE loft from the neck to the hip taper —
+ * a stack of elliptical rings stitched into a single smooth surface with
+ * seam-safe cylindrical UVs, so the paint can wrap a stripe anywhere.
+ * What FF2 never had, this one does: two ARMS (shoulder, elbow, a hand)
+ * and two LEGS (hip, knee, a foot), each segment its own small loft and
+ * a paint surface — arms share a sheet, legs share a sheet — with dark
+ * steel joints that never paint.
  *
- *   MANTLE  — the body, one loft laid along z: a rounded prow, a broad
- *             back, a taper to the tail. Paint part `body`.
- *   HEAD    — a smaller loft slung under the prow, where a cuttlefish's
- *             head pokes out of its mantle; the two EYE TURRETS sit on it
- *             and track you (the chameleon in the name). Paint part `head`.
- *   LEGS    — four, insect-jointed: hip (splay about z, swing about x),
- *             knee (bend in the splay plane), a foot pad. Shells are lofts
- *             and paint part `legs` (all four share one sheet). Joints are
- *             dark steel and never paint.
- *   FINS    — the mantle's skirt down each flank and a tail plate. Flat
- *             plates with normalised UVs, paint part `fin`.
- *
- * Every paintable mesh carries `userData.paintPart` and its own material
- * (the bake writes the map per material). Nothing here is merged: the
- * whole robot is ~20 draws and moves as a set of groups the poses drive.
+ * Authored at FF2's human size (hips at 0.95 m); the companion system
+ * scales the root down to a thing you can pick up (COMPANION.scale).
+ * Front is −z. The two eye turrets on the head track you: the chameleon.
  */
 
-import {
-  BufferAttribute,
-  BufferGeometry,
-  DoubleSide,
-  Group,
-  Mesh,
-  MeshStandardMaterial,
-  Shape,
-  ShapeGeometry,
-  SphereGeometry,
-} from 'three';
+import { BufferAttribute, BufferGeometry, Group, Mesh, MeshStandardMaterial, SphereGeometry } from 'three';
 
-/** One elliptical cross-section of a loft, in the loft's local frame:
- *  centred at x = 0, half-width `w`, half-depth `d`, at height `y`. */
 export interface Ring {
   y: number;
   w: number;
@@ -44,16 +24,15 @@ export interface Ring {
   z?: number;
 }
 
-const SEG = 32;
+const SEG = 36;
 
-/** The blank's shell — soft matte porcelain white. One instance per mesh:
- *  the bake owns the map, and two meshes must never share a sheet unless
- *  they are meant to (the legs share on purpose, via `shared`). */
+/** The blank's shell — soft matte porcelain white. One instance per paint
+ *  sheet: the bake writes the map per material. */
 export function shellMat(): MeshStandardMaterial {
   return new MeshStandardMaterial({ color: 0xf4f2ee, roughness: 0.62, metalness: 0.04, envMapIntensity: 0.6 });
 }
 
-/** Joints, sockets, feet: dark steel, never painted. */
+/** Joints, sockets, soles: dark steel, never painted. */
 export function steelMat(): MeshStandardMaterial {
   return new MeshStandardMaterial({ color: 0x23262b, roughness: 0.45, metalness: 0.7, envMapIntensity: 0.8 });
 }
@@ -62,6 +41,7 @@ export function steelMat(): MeshStandardMaterial {
  * Stitch rings into ONE smooth closed surface (mannequin.ts's loft): the
  * seam vertex is duplicated so u runs a clean 0..1 around the body, v runs
  * by cumulative profile arc from the first ring (v = 1) to the last (v = 0).
+ * Front of the body sits at u = 0.75.
  */
 export function loft(rings: Ring[], mat: MeshStandardMaterial): Mesh {
   const cols = SEG + 1;
@@ -108,241 +88,197 @@ export function loft(rings: Ring[], mat: MeshStandardMaterial): Mesh {
   return new Mesh(geo, mat);
 }
 
-/**
- * A flat plate from a 2D outline, UVs normalised to its bounding box so
- * the paint canvas covers it edge to edge. Double-sided: a fin is seen
- * from both flanks and wears the same paint on each.
- */
-export function plate(points: [number, number][], mat: MeshStandardMaterial): Mesh {
-  const shape = new Shape();
-  points.forEach(([x, y], i) => (i === 0 ? shape.moveTo(x, y) : shape.lineTo(x, y)));
-  shape.closePath();
-  const geo = new ShapeGeometry(shape, 6);
-  geo.computeBoundingBox();
-  const bb = geo.boundingBox!;
-  const uvs = geo.getAttribute('uv');
-  for (let i = 0; i < uvs.count; i++) {
-    uvs.setXY(i, (uvs.getX(i) - bb.min.x) / (bb.max.x - bb.min.x || 1), (uvs.getY(i) - bb.min.y) / (bb.max.y - bb.min.y || 1));
-  }
-  uvs.needsUpdate = true;
-  mat.side = DoubleSide;
-  return new Mesh(geo, mat);
-}
-
 function paintable(mesh: Mesh, part: string): Mesh {
   mesh.userData.paintPart = part;
   mesh.castShadow = true;
   return mesh;
 }
 
-/* ── the plan, in metres ─────────────────────────────────────────────── */
+/* ── the plan, FF2's numbers ─────────────────────────────────────────── */
 
-/** The mantle, lofted along y then laid along z (the first ring becomes
- *  the prow at −z). Half-width w is across the body; d is its height. */
-const MANTLE_RINGS: Ring[] = [
-  { y: 0.2, w: 0.035, d: 0.03 }, // the prow — a rounded nose
-  { y: 0.185, w: 0.07, d: 0.052 },
-  { y: 0.16, w: 0.098, d: 0.07 },
-  { y: 0.12, w: 0.116, d: 0.082 }, // the shoulders — widest
-  { y: 0.07, w: 0.12, d: 0.086 },
-  { y: 0.02, w: 0.118, d: 0.084 },
-  { y: -0.03, w: 0.108, d: 0.078 },
-  { y: -0.08, w: 0.09, d: 0.066 },
-  { y: -0.13, w: 0.066, d: 0.05 },
-  { y: -0.17, w: 0.04, d: 0.032 },
-  { y: -0.2, w: 0.016, d: 0.014 }, // the tail
+/** ff2 BODY_IK.headRadius. */
+const HEAD_R = 0.13;
+/** The head's centre above the hips when standing (ff2 NECK_SEAT). */
+const NECK_SEAT = 0.64;
+
+/**
+ * THE BODY — ff2's BODY_RINGS, hip-local (y = 0 is the pelvis centre),
+ * top → down: the neck, the shoulder line, the chest, the waist pinch,
+ * the hip line, then a monotonic taper to a rounded tip.
+ */
+const BODY_RINGS: Ring[] = [
+  { y: 0.488, w: 0.048, d: 0.043, z: -0.058 },
+  { y: 0.47, w: 0.058, d: 0.05, z: -0.045 },
+  { y: 0.45, w: 0.08, d: 0.062, z: -0.028 },
+  { y: 0.425, w: 0.165, d: 0.078, z: -0.01 },
+  { y: 0.395, w: 0.252, d: 0.09 },
+  { y: 0.35, w: 0.232, d: 0.098 },
+  { y: 0.29, w: 0.166, d: 0.1 },
+  { y: 0.23, w: 0.124, d: 0.09 },
+  { y: 0.175, w: 0.094, d: 0.077 },
+  { y: 0.13, w: 0.09, d: 0.074 },
+  { y: 0.075, w: 0.105, d: 0.086 },
+  { y: 0.02, w: 0.126, d: 0.1 },
+  { y: -0.02, w: 0.132, d: 0.104 },
+  { y: -0.08, w: 0.115, d: 0.092 },
+  { y: -0.14, w: 0.078, d: 0.065 },
+  { y: -0.195, w: 0.04, d: 0.035 },
+  { y: -0.23, w: 0.014, d: 0.013 },
 ];
 
-/** The head: a squat egg slung under the prow. */
-const HEAD_RINGS: Ring[] = [
-  { y: 0.062, w: 0.018, d: 0.016 },
-  { y: 0.05, w: 0.044, d: 0.036 },
-  { y: 0.03, w: 0.06, d: 0.048 },
-  { y: 0.0, w: 0.064, d: 0.05 },
-  { y: -0.03, w: 0.056, d: 0.044 },
-  { y: -0.05, w: 0.036, d: 0.03 },
-  { y: -0.062, w: 0.012, d: 0.01 },
-];
-
-/** A leg segment: a slim loft, thicker at the top, `len` long along −y. */
-function legSegment(len: number, r0: number, r1: number, mat: MeshStandardMaterial): Mesh {
+/** A limb segment: a slim loft, `len` long along −y. */
+function segment(len: number, r0: number, r1: number, mat: MeshStandardMaterial): Mesh {
   return loft(
     [
       { y: 0, w: r0, d: r0 },
-      { y: -len * 0.35, w: r0 * 0.92, d: r0 * 0.92 },
+      { y: -len * 0.3, w: r0 * 0.95, d: r0 * 0.95 },
       { y: -len * 0.8, w: r1, d: r1 },
-      { y: -len, w: r1 * 0.7, d: r1 * 0.7 },
+      { y: -len, w: r1 * 0.75, d: r1 * 0.75 },
     ],
     mat,
   );
 }
 
+export const LIMB = {
+  hipX: 0.085,
+  hipY: -0.05,
+  thigh: 0.42,
+  shin: 0.43,
+  footH: 0.04,
+  shoulderX: 0.235,
+  shoulderY: 0.385,
+  upperArm: 0.29,
+  forearm: 0.27,
+} as const;
+
+/** Where the hips sit above the soles when standing straight. */
+export const STAND_HIP_Y = -LIMB.hipY + LIMB.thigh + LIMB.shin + LIMB.footH;
+
 export interface Leg {
-  /** The hip pivot, on the mantle's underside. */
   hip: Group;
-  /** The knee pivot, at the end of the upper segment. */
   knee: Group;
-  /** The foot pad, at the end of the lower segment (its world position is
-   *  where the foot touches down). */
   foot: Group;
-  /** +1 right side, −1 left. */
   side: 1 | -1;
-  /** +1 front pair, −1 rear. */
-  end: 1 | -1;
-  upperLen: number;
-  lowerLen: number;
+}
+
+export interface Arm {
+  shoulder: Group;
+  elbow: Group;
+  hand: Group;
+  side: 1 | -1;
 }
 
 export interface Eye {
-  /** The turret: yaws and pitches to track. */
   turret: Group;
 }
 
 export interface Robot {
   root: Group;
-  /** The mantle's pivot: everything but the legs' reach hangs off it. */
+  /** The pelvis pivot: everything hangs off it. */
   body: Group;
+  /** The head pivot, at the neck seat. */
   head: Group;
   legs: Leg[];
+  arms: Arm[];
   eyes: Eye[];
-  /** The tail plate's pivot. */
-  tail: Group;
-  /** The two skirt fins' pivots (left, right). */
-  skirts: Group[];
-  /** Every paintable mesh, for the bake and the bay's raycast. */
   shells: Mesh[];
 }
 
-export const LEG = { upper: 0.11, lower: 0.115, hipX: 0.088, hipZ: 0.095, hipY: -0.045 } as const;
-
-/** Build the blank robot at the origin, facing −z, feet at y = 0 when the
- *  STAND pose is applied. */
+/** Build the blank at the origin, facing −z, soles at y = 0 in STAND. */
 export function buildRobot(): Robot {
   const root = new Group();
   root.name = 'robot';
   const shells: Mesh[] = [];
 
-  // THE MANTLE. The loft runs along y; lay it along z so ring 0 is the prow
-  // at −z. After the turn, u = 0.25 is the top of the back and u = 0.75
-  // the belly; the flanks are u = 0 and u = 0.5.
   const body = new Group();
   body.name = 'body';
-  const mantle = paintable(loft(MANTLE_RINGS, shellMat()), 'body');
-  mantle.rotation.x = -Math.PI / 2;
-  body.add(mantle);
-  shells.push(mantle);
+  const torso = paintable(loft(BODY_RINGS, shellMat()), 'body');
+  body.add(torso);
+  shells.push(torso);
   root.add(body);
 
-  // THE HEAD, under the prow, with the eye turrets on top.
+  // THE HEAD — a bare egg floating clear of the neck (ff2's rule: a head
+  // carrying its neck drags it through the shoulders on every turn).
   const head = new Group();
   head.name = 'head';
-  head.position.set(0, -0.02, -0.19);
-  const skull = paintable(loft(HEAD_RINGS, shellMat()), 'head');
-  skull.rotation.x = -Math.PI / 2;
+  head.position.set(0, NECK_SEAT, -0.03);
+  const skull = paintable(new Mesh(new SphereGeometry(HEAD_R, 28, 22), shellMat()), 'head');
+  skull.scale.set(0.84, 1.08, 0.93);
+  skull.position.y = HEAD_R * 0.05;
   head.add(skull);
   shells.push(skull);
   const eyes: Eye[] = [];
   for (const side of [-1, 1] as const) {
     const turret = new Group();
-    turret.position.set(side * 0.036, 0.036, 0.008);
-    const socket = new Mesh(new SphereGeometry(0.02, 14, 10), steelMat());
-    socket.scale.set(1, 0.9, 1);
+    turret.position.set(side * 0.052, 0.02, -HEAD_R * 0.86);
+    const socket = new Mesh(new SphereGeometry(0.03, 14, 10), steelMat());
     turret.add(socket);
     const lens = new Mesh(
-      new SphereGeometry(0.012, 12, 8),
+      new SphereGeometry(0.018, 12, 8),
       new MeshStandardMaterial({ color: 0x0a0c10, roughness: 0.15, metalness: 0.2, envMapIntensity: 1.2 }),
     );
-    lens.position.set(0, 0.002, -0.014);
+    lens.position.set(0, 0.002, -0.02);
     turret.add(lens);
-    const glint = new Mesh(new SphereGeometry(0.004, 6, 4), new MeshStandardMaterial({ color: 0x2ee2c2, emissive: 0x2ee2c2, emissiveIntensity: 1.6 }));
-    glint.position.set(0, 0.004, -0.024);
+    const glint = new Mesh(new SphereGeometry(0.006, 6, 4), new MeshStandardMaterial({ color: 0x2ee2c2, emissive: 0x2ee2c2, emissiveIntensity: 1.6 }));
+    glint.position.set(0, 0.005, -0.035);
     turret.add(glint);
     head.add(turret);
     eyes.push({ turret });
   }
   body.add(head);
 
-  // THE LEGS. Hips on the underside at the four corners of the mantle.
-  const legs: Leg[] = [];
-  const legMat = shellMat(); // ONE material: the four legs share a sheet
-  for (const end of [1, -1] as const) {
-    for (const side of [-1, 1] as const) {
-      const hip = new Group();
-      hip.position.set(side * LEG.hipX, LEG.hipY, -end * LEG.hipZ);
-      const hipBall = new Mesh(new SphereGeometry(0.02, 12, 8), steelMat());
-      hip.add(hipBall);
-      const upper = paintable(legSegment(LEG.upper, 0.017, 0.013, legMat), 'legs');
-      hip.add(upper);
-      const knee = new Group();
-      knee.position.y = -LEG.upper;
-      const kneeBall = new Mesh(new SphereGeometry(0.015, 12, 8), steelMat());
-      knee.add(kneeBall);
-      const lower = paintable(legSegment(LEG.lower, 0.013, 0.01, legMat), 'legs');
-      knee.add(lower);
-      const foot = new Group();
-      foot.position.y = -LEG.lower;
-      const pad = new Mesh(new SphereGeometry(0.014, 10, 7), steelMat());
-      pad.scale.set(1.2, 0.6, 1.2);
-      foot.add(pad);
-      knee.add(foot);
-      hip.add(knee);
-      body.add(hip);
-      shells.push(upper, lower);
-      legs.push({ hip, knee, foot, side, end, upperLen: LEG.upper, lowerLen: LEG.lower });
-    }
+  // THE ARMS.
+  const arms: Arm[] = [];
+  const armMat = shellMat();
+  for (const side of [-1, 1] as const) {
+    const shoulder = new Group();
+    shoulder.position.set(side * LIMB.shoulderX, LIMB.shoulderY, 0);
+    shoulder.add(new Mesh(new SphereGeometry(0.04, 12, 8), steelMat()));
+    const upper = paintable(segment(LIMB.upperArm, 0.036, 0.03, armMat), 'arms');
+    shoulder.add(upper);
+    const elbow = new Group();
+    elbow.position.y = -LIMB.upperArm;
+    elbow.add(new Mesh(new SphereGeometry(0.03, 12, 8), steelMat()));
+    const fore = paintable(segment(LIMB.forearm, 0.03, 0.024, armMat), 'arms');
+    elbow.add(fore);
+    const hand = new Group();
+    hand.position.y = -LIMB.forearm;
+    const fist = new Mesh(new SphereGeometry(0.038, 12, 8), steelMat());
+    fist.scale.set(0.85, 1.1, 0.7);
+    hand.add(fist);
+    elbow.add(hand);
+    shoulder.add(elbow);
+    body.add(shoulder);
+    shells.push(upper, fore);
+    arms.push({ shoulder, elbow, hand, side });
   }
 
-  // THE FINS: a skirt down each flank, a plate at the tail.
-  const finMat = shellMat();
-  const skirts: Group[] = [];
+  // THE LEGS.
+  const legs: Leg[] = [];
+  const legMat = shellMat();
   for (const side of [-1, 1] as const) {
-    const pivot = new Group();
-    pivot.position.set(side * 0.108, -0.012, 0.0);
-    const fin = paintable(
-      plate(
-        [
-          [0, -0.13],
-          [0.03, -0.1],
-          [0.048, -0.02],
-          [0.044, 0.06],
-          [0.028, 0.12],
-          [0, 0.15],
-        ],
-        finMat,
-      ),
-      'fin',
-    );
-    // The plate is drawn in xy; lay it flat-ish along the flank (xz), tipped
-    // down a touch like a cuttlefish's fin, mirrored per side.
-    fin.rotation.set(Math.PI / 2, side * 0.35, 0);
-    fin.scale.x = side;
-    pivot.add(fin);
-    body.add(pivot);
-    skirts.push(pivot);
-    shells.push(fin);
+    const hip = new Group();
+    hip.position.set(side * LIMB.hipX, LIMB.hipY, 0);
+    hip.add(new Mesh(new SphereGeometry(0.048, 12, 8), steelMat()));
+    const thigh = paintable(segment(LIMB.thigh, 0.05, 0.04, legMat), 'legs');
+    hip.add(thigh);
+    const knee = new Group();
+    knee.position.y = -LIMB.thigh;
+    knee.add(new Mesh(new SphereGeometry(0.04, 12, 8), steelMat()));
+    const shin = paintable(segment(LIMB.shin, 0.04, 0.032, legMat), 'legs');
+    knee.add(shin);
+    const foot = new Group();
+    foot.position.y = -LIMB.shin;
+    const sole = new Mesh(new SphereGeometry(0.05, 12, 8), steelMat());
+    sole.scale.set(1.0, LIMB.footH / 0.05, 1.7);
+    sole.position.set(0, -LIMB.footH * 0.5, -0.035);
+    foot.add(sole);
+    knee.add(foot);
+    hip.add(knee);
+    body.add(hip);
+    shells.push(thigh, shin);
+    legs.push({ hip, knee, foot, side });
   }
-  const tail = new Group();
-  tail.position.set(0, 0.0, 0.19);
-  const tailFin = paintable(
-    plate(
-      [
-        [0, 0.02],
-        [0.05, 0.005],
-        [0.075, -0.03],
-        [0.045, -0.02],
-        [0, -0.035],
-        [-0.045, -0.02],
-        [-0.075, -0.03],
-        [-0.05, 0.005],
-      ],
-      finMat,
-    ),
-    'fin',
-  );
-  tailFin.rotation.x = -Math.PI / 2 + 0.2;
-  tail.add(tailFin);
-  body.add(tail);
-  shells.push(tailFin);
 
   root.traverse((o) => {
     const m = o as Mesh;
@@ -352,5 +288,5 @@ export function buildRobot(): Robot {
     }
   });
 
-  return { root, body, head, legs, eyes, tail, skirts, shells };
+  return { root, body, head, legs, arms, eyes, shells };
 }

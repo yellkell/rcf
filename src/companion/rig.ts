@@ -1,58 +1,50 @@
 /**
- * THE RIG — applies a Pose to a Robot, and walks it.
+ * THE RIG — applies a Pose to the figure, and walks it.
  *
  * Every frame the companion system hands this the current (tweened) pose
- * and how far the robot has walked this frame; it sets every group's
- * position and rotation from those numbers. Walking is a trot: diagonal
- * pairs (front-left with rear-right) swing together, the swing leg lifts
- * at the knee, and the mantle bobs a millimetre or two on the beat.
+ * and how far the figure walked; it sets every group's position and
+ * rotation from those numbers. Walking swings the legs alternately with
+ * the arms counter-swinging, the swing leg lifting at the knee, and the
+ * body bobbing a touch on each footfall.
  */
 
 import type { Robot } from './body.js';
 import type { Pose } from './poses.js';
 
-/** One stride's length (m) — the gait clock runs on distance, not time,
- *  so feet never slide: stopped means still. */
-const STRIDE = 0.16;
-const SWING_AMP = 0.42;
-const LIFT_AMP = 0.75;
-const BOB = 0.006;
-
-/** Skirt fin rotation as built (rig.ts flares it up by this much). */
-const SKIRT_FLARE = 0.35;
+/** One stride's length in WORLD metres — the gait clock runs on distance,
+ *  not time, so feet never slide: stopped means still. */
+export const GAIT_STRIDE = 0.2;
+const LEG_SWING = 0.55;
+const KNEE_LIFT = 0.9;
+const ARM_SWING = 0.4;
+const BOB = 0.012;
 
 export function applyPose(robot: Robot, pose: Pose, gaitPhase: number, moving: number): void {
-  const bob = moving * BOB * Math.sin(gaitPhase * Math.PI * 4);
+  const bob = moving * BOB * Math.abs(Math.sin(gaitPhase * Math.PI * 2));
   robot.body.position.y = pose.bodyY + bob;
-  robot.body.rotation.set(pose.pitch, 0, pose.roll);
-
-  // The head: tilts, and tucks back under the prow.
+  robot.body.rotation.set(pose.pitch + pose.lean * 0.35, 0, 0);
   robot.head.rotation.x = pose.headPitch;
-  robot.head.position.z = -0.19 + pose.headTuck * 0.075;
-  robot.head.position.y = -0.02 - pose.headTuck * 0.01;
 
   for (const leg of robot.legs) {
-    const base = leg.end > 0 ? pose.front : pose.rear;
-    // The gait: diagonal pairs share a phase; the other pair is half a
-    // stride behind. swing = fore/aft; lift folds the knee mid-swing.
-    const pairPhase = (leg.side * leg.end > 0 ? gaitPhase : gaitPhase + 0.5) % 1;
-    const swing = moving * SWING_AMP * Math.sin(pairPhase * Math.PI * 2);
-    const lift = moving * LIFT_AMP * Math.max(0, Math.sin(pairPhase * Math.PI * 2 + Math.PI / 2));
-    // Splay is about z, mirrored per side; the knee folds back in the same
-    // plane. Swing is about x. Rotation order 'ZXY' so the splay frames the
-    // swing (an insect leg reaches out, then forward).
+    // Left and right legs half a stride apart.
+    const ph = (leg.side > 0 ? gaitPhase : gaitPhase + 0.5) % 1;
+    const swing = moving * LEG_SWING * Math.sin(ph * Math.PI * 2);
+    const lift = moving * KNEE_LIFT * Math.max(0, Math.sin(ph * Math.PI * 2 + Math.PI / 2));
     leg.hip.rotation.order = 'ZXY';
-    leg.hip.rotation.z = leg.side * base.splay;
-    leg.hip.rotation.x = base.swing + swing;
-    leg.knee.rotation.z = -leg.side * (base.knee + lift);
+    // The torso's lean is the hips' doing: the legs stay planted.
+    leg.hip.rotation.x = -(pose.leg.swing + swing) - pose.lean * 0.35;
+    leg.hip.rotation.z = leg.side * pose.leg.splay;
+    leg.knee.rotation.x = pose.leg.knee + lift;
+    leg.foot.rotation.x = -(pose.leg.knee + lift - pose.leg.swing - swing) * 0.6;
   }
 
-  for (let i = 0; i < robot.skirts.length; i++) {
-    const side = i === 0 ? -1 : 1;
-    // Folded flat = rolled up against the flank.
-    robot.skirts[i].rotation.z = side * (pose.skirt * (SKIRT_FLARE + 0.9));
+  for (const arm of robot.arms) {
+    // Arms counter to the leg on the same side.
+    const ph = (arm.side > 0 ? gaitPhase + 0.5 : gaitPhase) % 1;
+    const swing = moving * ARM_SWING * Math.sin(ph * Math.PI * 2);
+    arm.shoulder.rotation.order = 'ZXY';
+    arm.shoulder.rotation.x = -(pose.arm.swing + swing);
+    arm.shoulder.rotation.z = arm.side * pose.arm.raise;
+    arm.elbow.rotation.x = -(pose.arm.elbow + moving * 0.25);
   }
-  robot.tail.rotation.x = pose.tail;
 }
-
-export const GAIT_STRIDE = STRIDE;

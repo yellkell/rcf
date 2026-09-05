@@ -13,7 +13,7 @@
  * once as the material's map. A repaint happens only when the look
  * changes; at runtime a painted robot costs exactly what a blank costs.
  *
- * What changed from FF2: the parts are the robot's (head, body, legs, fin);
+ * What changed from FF2: the parts are the figure's (head, body, legs, arms);
  * there is no locker and no wallet — every colour on the rack is free to
  * take, because here the paint is the game, not the endgame; and the bake
  * keys its canvas on the material, so the four legs (one material) bake
@@ -27,8 +27,8 @@ export type PaintKind = 'stripe' | 'splotch' | 'dot' | 'square';
 export const PAINT_KINDS: readonly PaintKind[] = ['stripe', 'splotch', 'dot', 'square'];
 export const KIND_LABEL: Record<PaintKind, string> = { stripe: 'STRIPE', splotch: 'SPLOTCH', dot: 'DOT', square: 'SQUARE' };
 
-export type PaintPart = 'head' | 'body' | 'legs' | 'fin';
-export const PAINT_PARTS: readonly PaintPart[] = ['head', 'body', 'legs', 'fin'];
+export type PaintPart = 'head' | 'body' | 'legs' | 'arms';
+export const PAINT_PARTS: readonly PaintPart[] = ['head', 'body', 'legs', 'arms'];
 
 export interface PlacedPaint {
   kind: PaintKind;
@@ -118,7 +118,7 @@ export function clearLook(): void {
 // first; the part order is append-only.
 
 const WIRE_FORMAT = 1;
-const WIRE_PARTS: PaintPart[] = ['head', 'body', 'legs', 'fin'];
+const WIRE_PARTS: PaintPart[] = ['head', 'body', 'legs', 'arms'];
 const WIRE_KINDS: PaintKind[] = ['stripe', 'splotch', 'dot', 'square'];
 const WIRE_MAX_CHARS = 1024;
 
@@ -210,7 +210,7 @@ export function handTake(kind: PaintKind, colour: number): void {
     colour,
     variant: Math.floor(Math.random() * 8),
     part: 'body',
-    u: 0.25,
+    u: 0.75,
     v: 0.5,
     angle: 0,
     len: kind === 'stripe' ? 0.3 : kind === 'splotch' ? 0.35 : kind === 'dot' ? 0.16 : 0.2,
@@ -413,19 +413,19 @@ export function demoLook(): Look {
   });
   return {
     paint: [
-      // Moss down the spine (the back is u = 0.25), fern bands across it.
-      s('body', 0.25, 0.5, 0.25, 0.7, 0.09, 24),
-      s('body', 0.25, 0.7, 0, 0.36, 0.06, 25),
-      s('body', 0.25, 0.4, 0, 0.4, 0.06, 25),
-      b('body', 0.02, 0.45, 0.4, 26, 3),
-      b('body', 0.48, 0.45, 0.4, 26, 7),
-      b('body', 0.25, 0.22, 0.32, 27, 11),
-      s('head', 0.25, 0.55, 0, 0.5, 0.12, 24),
-      b('head', 0.25, 0.3, 0.3, 26, 5),
+      // Moss down the chest (the front is u = 0.75), fern bands across it.
+      s('body', 0.75, 0.6, 0.25, 0.5, 0.09, 24),
+      s('body', 0.75, 0.78, 0, 0.36, 0.06, 25),
+      s('body', 0.75, 0.42, 0, 0.4, 0.06, 25),
+      b('body', 0.02, 0.5, 0.4, 26, 3),
+      b('body', 0.48, 0.5, 0.4, 26, 7),
+      b('body', 0.25, 0.3, 0.36, 27, 11),
+      s('head', 0.75, 0.55, 0, 0.5, 0.12, 24),
+      b('head', 0.25, 0.4, 0.3, 26, 5),
       s('legs', 0.5, 0.5, 0.25, 0.9, 0.2, 25),
-      b('fin', 0.5, 0.5, 0.45, 24, 2),
-      { kind: 'dot', part: 'body', u: 0.25, v: 0.86, angle: 0, len: 0.12, wid: 0.5, colour: 32, variant: 0 },
-      { kind: 'square', part: 'fin', u: 0.3, v: 0.6, angle: 0.125, len: 0.2, wid: 0.5, colour: 27, variant: 0 },
+      b('arms', 0.5, 0.5, 0.45, 24, 2),
+      { kind: 'dot', part: 'body', u: 0.75, v: 0.86, angle: 0, len: 0.12, wid: 0.5, colour: 32, variant: 0 },
+      { kind: 'square', part: 'arms', u: 0.3, v: 0.6, angle: 0.125, len: 0.2, wid: 0.5, colour: 27, variant: 0 },
     ],
   };
 }

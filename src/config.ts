@@ -48,8 +48,9 @@ export const TELEPORT = {
  * THE COMPANION — the little robot that walks in front of you.
  */
 export const COMPANION = {
-  /** Its build scale: the loft is authored roughly human-sized (the FF2
-   *  blank), and this brings it down to a thing you could pick up. */
+  /** Its build scale: the figure is authored at the FF2 blank's human
+   *  size (hips at 0.95 m), and this brings it down to a little guy of
+   *  about 0.6 m you could pick up. */
   scale: 0.36,
   /** Where it keeps station: this far ahead of your head, on the floor. */
   stationDistance: 0.95,
@@ -80,7 +81,7 @@ export const PAINT = {
   /** Placed units per look — the cap IS the wire/moderation bound. */
   maxUnits: 64,
   /** Paint canvas size per part (px, square). The legs share one sheet. */
-  canvas: { head: 256, body: 512, legs: 256, fin: 128 } as Record<string, number>,
+  canvas: { head: 256, body: 512, legs: 256, arms: 256 } as Record<string, number>,
   /** The biggest a unit can be sized (fraction of its part's canvas). */
   maxSize: 0.55,
   /** The most metal a PAINTED surface stays — a mirror has no diffuse. */

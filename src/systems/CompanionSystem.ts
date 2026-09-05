@@ -104,11 +104,12 @@ export class CompanionSystem extends createSystem({}) {
 
   init(): void {
     this.robot = buildRobot();
+    this.robot.root.scale.setScalar(COMPANION.scale);
     this.scene.add(this.robot.root);
     // The shadow map is baked once and never follows the robot, so it
     // carries its own: a soft dark disc at its feet, a child of the root
     // so it lies on whatever surface the robot is on.
-    this.blob = new Mesh(new CircleGeometry(0.26, 24), new MeshBasicMaterial({ map: blobTexture(), transparent: true, depthWrite: false, opacity: 0.55 }));
+    this.blob = new Mesh(new CircleGeometry(0.42, 24), new MeshBasicMaterial({ map: blobTexture(), transparent: true, depthWrite: false, opacity: 0.55 }));
     this.blob.rotation.x = -Math.PI / 2;
     this.blob.position.y = 0.006;
     this.blob.renderOrder = 1;
@@ -163,8 +164,9 @@ export class CompanionSystem extends createSystem({}) {
     applyPose(robot, this.pose, this.gait, this.moving);
     this.updateEyes();
     // The blob spreads as the body comes down, and fades when carried.
-    const spread = 1.35 - this.pose.bodyY * 2.2;
-    this.blob.scale.setScalar(Math.max(0.6, spread));
+    // Lying figures cover more floor than standing ones.
+    const spread = 1.8 - this.pose.bodyY * 1.1;
+    this.blob.scale.set(Math.max(0.7, spread * 0.8), Math.max(0.7, spread), 1);
     (this.blob.material as MeshBasicMaterial).opacity = companion.state === 'held' ? 0 : 0.55;
   }
 
@@ -284,8 +286,8 @@ export class CompanionSystem extends createSystem({}) {
     }
     // Park the wheel above the robot, facing you.
     robot.body.getWorldPosition(_p);
-    this.wheel.group.position.set(_p.x, _p.y + 0.34, _p.z);
-    this.wheel.group.lookAt(_head.x, _p.y + 0.34, _head.z);
+    this.wheel.group.position.set(_p.x, _p.y + 0.5, _p.z);
+    this.wheel.group.lookAt(_head.x, _p.y + 0.5, _head.z);
     // Hover: ray against the wheel plane, wedge by angle.
     const hand = this.wheelHand;
     aimRay(this.player, hand, _ray);
@@ -377,7 +379,7 @@ export class CompanionSystem extends createSystem({}) {
       this.heldBy = hand;
       companion.state = 'held';
       companion.following = false;
-      this.target = POSES.crouch;
+      this.target = POSES.crouch; // it balls up in your hand
       this.player.gripSpaces[hand].attach(robot.root);
       sfx.grab();
       return;

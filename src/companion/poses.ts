@@ -1,40 +1,44 @@
 /**
  * THE POSES — what the wheel offers, as data.
  *
- * A pose is a flat record of joint values (radians and metres); the
- * companion tweens between them with an exponential chase (the head/torso
- * half of ff2's poseMotion) and applies the result to the robot's groups
- * every frame. No skeleton, no clips: seven records and one function.
+ * A pose is a flat record of joint values (radians, and metres at FF2's
+ * human size — the root is scaled down afterwards); the companion tweens
+ * between them with an exponential chase and applies the result to the
+ * figure's groups every frame. No skeleton, no clips: seven records and
+ * one function.
  *
- * Legs are insect-jointed. For each: SPLAY swings the leg out to the side
- * in the body's cross-section (0 = straight down, π/2 = straight out),
- * SWING yaws it fore/aft, KNEE folds the lower segment back in the splay
- * plane. The four are ordered front-left, front-right, rear-left,
- * rear-right; a pose gives a pair (front, rear) and the sides mirror.
+ * Limbs hang off the pelvis. A LEG: `swing` about x (positive = forward),
+ * `splay` about z (positive = out to the side, mirrored), `knee` folds
+ * the shin back. An ARM: `swing` about x (positive = forward), `raise`
+ * about z (positive = out and up, mirrored), `elbow` folds the forearm
+ * forward. `pitch` tips the whole figure about the hips (positive = face
+ * down), which is how it lies, flattens and clings.
  */
 
+import { STAND_HIP_Y } from './body.js';
+
 export interface LegPose {
-  splay: number;
   swing: number;
+  splay: number;
   knee: number;
 }
 
+export interface ArmPose {
+  swing: number;
+  raise: number;
+  elbow: number;
+}
+
 export interface Pose {
-  /** Height of the mantle's pivot above the floor (m). */
+  /** Height of the pelvis above the soles' floor (human units). */
   bodyY: number;
-  /** Mantle pitch: positive tips the prow UP. */
+  /** Whole-figure pitch about the hips: positive = face down. */
   pitch: number;
-  roll: number;
-  /** The head's tilt (positive looks up) and how far it tucks back under
-   *  the prow (0 = out, 1 = fully tucked). */
+  /** Lean of the torso only (positive = forward). */
+  lean: number;
   headPitch: number;
-  headTuck: number;
-  front: LegPose;
-  rear: LegPose;
-  /** Skirt fins: 0 = flared as built, 1 = folded flat against the flank. */
-  skirt: number;
-  /** Tail plate pitch. */
-  tail: number;
+  leg: LegPose;
+  arm: ArmPose;
 }
 
 export type PoseId = 'stand' | 'sit' | 'lie' | 'crouch' | 'flatten' | 'cling' | 'periscope';
@@ -54,95 +58,74 @@ export const POSE_LABEL: Record<PoseId, string> = {
 const d = (deg: number): number => (deg * Math.PI) / 180;
 
 export const POSES: Record<PoseId, Pose> = {
-  // On its feet, alert, a little splay so the stance reads as planted.
+  // On its feet, easy: a little knee, arms hanging a touch out.
   stand: {
-    bodyY: 0.215,
+    bodyY: STAND_HIP_Y - 0.01,
     pitch: 0,
-    roll: 0,
+    lean: 0,
     headPitch: 0,
-    headTuck: 0,
-    front: { splay: d(22), swing: d(12), knee: d(30) },
-    rear: { splay: d(22), swing: d(-10), knee: d(30) },
-    skirt: 0,
-    tail: 0,
+    leg: { swing: d(2), splay: d(4), knee: d(4) },
+    arm: { swing: d(4), raise: d(10), elbow: d(12) },
   },
-  // Haunches down, front legs straight — a dog's sit.
+  // On the floor, legs out in front, hands in its lap.
   sit: {
-    bodyY: 0.15,
-    pitch: d(22),
-    roll: 0,
-    headPitch: d(-8),
-    headTuck: 0,
-    front: { splay: d(14), swing: d(18), knee: d(8) },
-    rear: { splay: d(60), swing: d(-30), knee: d(120) },
-    skirt: 0.2,
-    tail: d(-20),
-  },
-  // Belly on the floor, legs out flat to the sides.
-  lie: {
-    bodyY: 0.088,
-    pitch: 0,
-    roll: 0,
+    bodyY: 0.2,
+    pitch: d(-4),
+    lean: d(8),
     headPitch: d(-6),
-    headTuck: 0.2,
-    front: { splay: d(82), swing: d(20), knee: d(60) },
-    rear: { splay: d(82), swing: d(-20), knee: d(60) },
-    skirt: 0.3,
-    tail: d(-8),
+    leg: { swing: d(84), splay: d(10), knee: d(12) },
+    arm: { swing: d(40), raise: d(6), elbow: d(70) },
   },
-  // Knees deep, low, ready — the pounce.
+  // Flat on its back, hands at its sides, looking up.
+  lie: {
+    bodyY: 0.12,
+    pitch: d(-90),
+    lean: 0,
+    headPitch: d(-10),
+    leg: { swing: d(2), splay: d(8), knee: d(4) },
+    arm: { swing: d(-4), raise: d(20), elbow: d(6) },
+  },
+  // Balled up small: knees to chest, arms wrapped, head down.
   crouch: {
-    bodyY: 0.13,
-    pitch: d(-6),
-    roll: 0,
-    headPitch: d(6),
-    headTuck: 0,
-    front: { splay: d(48), swing: d(22), knee: d(105) },
-    rear: { splay: d(48), swing: d(-22), knee: d(105) },
-    skirt: 0,
-    tail: d(6),
+    bodyY: 0.34,
+    pitch: 0,
+    lean: d(28),
+    headPitch: d(20),
+    leg: { swing: d(112), splay: d(8), knee: d(128) },
+    arm: { swing: d(58), raise: d(2), elbow: d(112) },
   },
-  // The pancake: everything flat, head tucked, fins folded.
+  // Face down and spread out: the pancake.
   flatten: {
-    bodyY: 0.086,
-    pitch: 0,
-    roll: 0,
-    headPitch: d(-14),
-    headTuck: 0.85,
-    front: { splay: d(88), swing: d(35), knee: d(12) },
-    rear: { splay: d(88), swing: d(-35), knee: d(12) },
-    skirt: 0.95,
-    tail: d(-14),
+    bodyY: 0.12,
+    pitch: d(90),
+    lean: 0,
+    headPitch: d(-16),
+    leg: { swing: d(-2), splay: d(30), knee: d(2) },
+    arm: { swing: d(-8), raise: d(150), elbow: d(10) },
   },
-  // Gripping a surface: legs wide and bent, body pulled in close. The
-  // companion system rolls the whole robot onto the surface normal.
+  // Spread-eagle against a surface, face to it, gripping wide. The
+  // companion system rolls the whole figure onto the surface's normal.
   cling: {
-    bodyY: 0.105,
-    pitch: 0,
-    roll: 0,
-    headPitch: d(4),
-    headTuck: 0.3,
-    front: { splay: d(66), swing: d(40), knee: d(118) },
-    rear: { splay: d(66), swing: d(-40), knee: d(118) },
-    skirt: 0.6,
-    tail: 0,
+    bodyY: 0.13,
+    pitch: d(90),
+    lean: 0,
+    headPitch: d(-30),
+    leg: { swing: d(24), splay: d(38), knee: d(30) },
+    arm: { swing: d(-6), raise: d(135), elbow: d(20) },
   },
-  // Up on straight legs, prow raised, looking over the parapet.
+  // Up on tiptoe, arms straight up, chin up: the lookout.
   periscope: {
-    bodyY: 0.25,
-    pitch: d(32),
-    roll: 0,
-    headPitch: d(18),
-    headTuck: 0,
-    front: { splay: d(10), swing: d(8), knee: d(4) },
-    rear: { splay: d(12), swing: d(-6), knee: d(6) },
-    skirt: 0,
-    tail: d(12),
+    bodyY: STAND_HIP_Y + 0.05,
+    pitch: 0,
+    lean: d(-6),
+    headPitch: d(-22),
+    leg: { swing: 0, splay: d(2), knee: 0 },
+    arm: { swing: d(8), raise: d(170), elbow: d(4) },
   },
 };
 
 export function clonePose(p: Pose): Pose {
-  return { ...p, front: { ...p.front }, rear: { ...p.rear } };
+  return { ...p, leg: { ...p.leg }, arm: { ...p.arm } };
 }
 
 /** Chase `to` from `cur` in place; `k` is the per-frame blend (0..1). */
@@ -150,14 +133,12 @@ export function chasePose(cur: Pose, to: Pose, k: number): void {
   const mix = (a: number, b: number): number => a + (b - a) * k;
   cur.bodyY = mix(cur.bodyY, to.bodyY);
   cur.pitch = mix(cur.pitch, to.pitch);
-  cur.roll = mix(cur.roll, to.roll);
+  cur.lean = mix(cur.lean, to.lean);
   cur.headPitch = mix(cur.headPitch, to.headPitch);
-  cur.headTuck = mix(cur.headTuck, to.headTuck);
-  cur.skirt = mix(cur.skirt, to.skirt);
-  cur.tail = mix(cur.tail, to.tail);
-  for (const key of ['front', 'rear'] as const) {
-    cur[key].splay = mix(cur[key].splay, to[key].splay);
-    cur[key].swing = mix(cur[key].swing, to[key].swing);
-    cur[key].knee = mix(cur[key].knee, to[key].knee);
-  }
+  cur.leg.swing = mix(cur.leg.swing, to.leg.swing);
+  cur.leg.splay = mix(cur.leg.splay, to.leg.splay);
+  cur.leg.knee = mix(cur.leg.knee, to.leg.knee);
+  cur.arm.swing = mix(cur.arm.swing, to.arm.swing);
+  cur.arm.raise = mix(cur.arm.raise, to.arm.raise);
+  cur.arm.elbow = mix(cur.arm.elbow, to.arm.elbow);
 }

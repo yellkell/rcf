@@ -70,7 +70,7 @@ try {
   });
   console.log(JSON.stringify(r));
   check(r.place === 'garden', 'the garden loaded');
-  check(r.robotShells === 13, `robot has ${r.robotShells} paint shells`);
+  check(r.robotShells === 10, `robot has ${r.robotShells} paint shells`);
   check(r.bodyYLie < r.bodyYStand - 0.05 && r.poseId === 'lie', 'LIE pose tweened the body down');
   check(r.count === 12 && r.roundtrip && r.wireLen > 0, 'demo look packs and roundtrips the wire');
   check(r.held && r.placed && r.countAfterPlace === 13 && r.lifted && r.countAfterLift === 12, 'hand takes, places and lifts');
