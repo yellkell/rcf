@@ -1,0 +1,57 @@
+<!doctype html>
+<!-- DEV-ONLY harness: renders a place with the robot in it for screenshots.
+     Not shipped. ?place=garden  ?x= ?y= ?z= (camera)  ?yaw=<rad> ?pitch=<rad>
+     ?pose=stand|sit|lie|crouch|flatten|cling|periscope  ?paint=demo|none
+     ?rx= ?rz= ?ry= (robot position / yaw) -->
+<html>
+  <body style="margin:0; background:#000">
+    <script type="module">
+      import { ACESFilmicToneMapping, Fog, PerspectiveCamera, PMREMGenerator, Scene, WebGLRenderer } from 'three';
+      import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+      import { buildGarden } from '/src/env/garden.ts';
+      import { buildRobot } from '/src/companion/body.ts';
+      import { applyPose } from '/src/companion/rig.ts';
+      import { POSES } from '/src/companion/poses.ts';
+      import { applyLook, demoLook } from '/src/companion/paint.ts';
+
+      const q = new URLSearchParams(location.search);
+      const num = (k, d) => (q.has(k) ? Number(q.get(k)) : d);
+      const scene = new Scene();
+      const renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(1);
+      renderer.toneMapping = ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.0;
+      renderer.shadowMap.enabled = true;
+      document.body.appendChild(renderer.domElement);
+      scene.environment = new PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+      scene.environmentIntensity = 0.35;
+
+      const builders = { garden: buildGarden };
+      const place = (builders[q.get('place') ?? 'garden'] ?? buildGarden)();
+      scene.add(place.root);
+      scene.background = place.sky;
+      scene.fog = new Fog(place.sky.getHex(), 18, 140);
+
+      const robot = buildRobot();
+      robot.root.position.set(num('rx', place.spawn.x), 0, num('rz', place.spawn.z - 1.0));
+      robot.root.rotation.y = num('ry', Math.PI);
+      scene.add(robot.root);
+      const pose = POSES[q.get('pose') ?? 'stand'] ?? POSES.stand;
+      applyPose(robot, pose, 0, 0);
+      if ((q.get('paint') ?? 'demo') === 'demo') applyLook(robot.root, demoLook());
+      else applyLook(robot.root, { paint: [] });
+
+      const camera = new PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 400);
+      camera.position.set(num('x', place.spawn.x), num('y', 1.6), num('z', place.spawn.z));
+      camera.rotation.order = 'YXZ';
+      camera.rotation.y = num('yaw', place.spawn.yaw);
+      camera.rotation.x = num('pitch', -0.12);
+      place.update?.(0.016, 0);
+      renderer.render(scene, camera);
+      window.__scene = scene; window.__renderer = renderer; window.__camera = camera;
+      window.__stats = { calls: renderer.info.render.calls, tris: renderer.info.render.triangles };
+      window.__ready = true;
+    </script>
+  </body>
+</html>

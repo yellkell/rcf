@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Robot Cuttlefish</title>
+    <meta name="theme-color" content="#0b1116" />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #0b1116;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+      #scene-container {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        background:
+          radial-gradient(circle at 70% 30%, rgba(46, 226, 194, 0.18), transparent 34rem),
+          linear-gradient(135deg, #060a0d 0%, #0e1a1f 52%, #1a2a1a 100%);
+      }
+      /* The landing: the title in its pool of teal, on near-black, one button. */
+      .landing {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(24px, 6vh, 52px);
+        padding: clamp(16px, 5vw, 48px);
+        box-sizing: border-box;
+        background: #05080a;
+        transition:
+          opacity 220ms ease,
+          visibility 220ms ease;
+      }
+      .landing__title {
+        position: relative;
+        z-index: 1;
+        margin: 0;
+        color: #e7f4f1;
+        font: 900 clamp(40px, 9vw, 96px) / 0.95 system-ui, -apple-system, sans-serif;
+        letter-spacing: 0.04em;
+        text-align: center;
+        text-transform: uppercase;
+      }
+      .landing__title small {
+        display: block;
+        margin-top: 12px;
+        color: #2ee2c2;
+        font: 700 clamp(12px, 1.6vw, 16px) / 1.4 system-ui, sans-serif;
+        letter-spacing: 0.32em;
+      }
+      .landing__glow {
+        position: absolute;
+        width: 70vw;
+        max-width: 720px;
+        aspect-ratio: 3 / 2;
+        border-radius: 50%;
+        pointer-events: none;
+        background:
+          radial-gradient(circle, rgba(46, 226, 194, 0.42) 0%, rgba(46, 226, 194, 0.16) 36%, rgba(46, 226, 194, 0) 64%),
+          radial-gradient(circle, rgba(255, 176, 46, 0.22) 0%, rgba(255, 176, 46, 0.08) 48%, rgba(255, 176, 46, 0) 72%);
+        filter: blur(6px);
+        animation: landing-breathe 3.2s ease-in-out infinite;
+      }
+      @keyframes landing-breathe {
+        0%,
+        100% {
+          opacity: 0.55;
+          transform: scale(0.94);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.08);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .landing__glow {
+          animation: none;
+        }
+      }
+      .enter-vr {
+        position: relative;
+        z-index: 1;
+        padding: 16px 44px;
+        border: 2px solid #2ee2c2;
+        border-radius: 6px;
+        background: #0e1a1f;
+        color: #e7f4f1;
+        cursor: pointer;
+        font: 800 18px/1 system-ui, sans-serif;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        box-shadow:
+          0 0 18px rgba(46, 226, 194, 0.35),
+          inset 0 0 18px rgba(46, 226, 194, 0.12);
+        transition: transform 120ms ease, box-shadow 120ms ease;
+      }
+      .enter-vr:hover,
+      .enter-vr:focus-visible {
+        transform: translateY(-1px);
+        box-shadow:
+          0 0 26px rgba(46, 226, 194, 0.55),
+          inset 0 0 22px rgba(46, 226, 194, 0.18);
+      }
+      .enter-vr:disabled {
+        cursor: wait;
+        opacity: 0.6;
+        transform: none;
+      }
+      .landing__blurb {
+        max-width: 520px;
+        margin: 0;
+        color: rgba(231, 244, 241, 0.7);
+        font: 500 14px/1.6 system-ui, sans-serif;
+        text-align: center;
+      }
+      body.app-entered .landing {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scene-container"></div>
+    <section class="landing" id="landing" aria-label="Robot Cuttlefish">
+      <div class="landing__glow" aria-hidden="true"></div>
+      <h1 class="landing__title">Robot<br />Cuttlefish<small>paint it · pose it · hide it</small></h1>
+      <button class="enter-vr" id="enter-vr" type="button">Enter VR</button>
+      <p class="landing__blurb">
+        A little robot walks in front of you. Paint it to match the world, tell it how to sit, and tuck it somewhere nobody will look.
+      </p>
+    </section>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
