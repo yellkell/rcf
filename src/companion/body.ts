@@ -124,10 +124,13 @@ const BODY_RINGS: Ring[] = [
   { y: 0.075, w: 0.105, d: 0.086 },
   { y: 0.02, w: 0.126, d: 0.1 },
   { y: -0.02, w: 0.132, d: 0.104 },
-  { y: -0.08, w: 0.115, d: 0.092 },
-  { y: -0.14, w: 0.078, d: 0.065 },
-  { y: -0.195, w: 0.04, d: 0.035 },
-  { y: -0.23, w: 0.014, d: 0.013 },
+  // FF2's blank tapers from here to a point — a hip cut on a body with no
+  // legs. With legs under it that taper hangs between them, so the body
+  // ends at the hip line instead: a short rounded underside the legs hang
+  // from, nothing below the hips but leg.
+  { y: -0.06, w: 0.118, d: 0.094 },
+  { y: -0.09, w: 0.08, d: 0.066 },
+  { y: -0.105, w: 0.03, d: 0.026 },
 ];
 
 /** A limb segment: a slim loft, `len` long along −y. */
@@ -144,8 +147,8 @@ function segment(len: number, r0: number, r1: number, mat: MeshStandardMaterial)
 }
 
 export const LIMB = {
-  hipX: 0.085,
-  hipY: -0.05,
+  hipX: 0.095,
+  hipY: -0.055,
   thigh: 0.42,
   shin: 0.43,
   footH: 0.04,

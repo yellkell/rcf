@@ -49,11 +49,11 @@ export const TELEPORT = {
  */
 export const COMPANION = {
   /** Its build scale: the figure is authored at the FF2 blank's human
-   *  size (hips at 0.95 m), and this brings it down to a little guy of
-   *  about 0.6 m you could pick up. */
-  scale: 0.36,
+   *  size (hips at 0.95 m), and this brings it down to half a person —
+   *  about 0.85 m — a little guy you could pick up. */
+  scale: 0.5,
   /** Where it keeps station: this far ahead of your head, on the floor. */
-  stationDistance: 0.95,
+  stationDistance: 1.1,
   /** It stays put until you're this far from its station (m) — a slow head
    *  turn does not make it shuffle. */
   stationSlack: 0.55,
@@ -66,7 +66,7 @@ export const COMPANION = {
    *  at it" (m, measured at the closest approach to its centre). */
   pointRadius: 0.22,
   /** Grip within this distance of its body (m) picks it up. */
-  grabRadius: 0.3,
+  grabRadius: 0.38,
   /** Released this close to a wall or ceiling and it sticks (m). */
   stickReach: 0.35,
 } as const;

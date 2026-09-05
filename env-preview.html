@@ -36,7 +36,7 @@
       scene.fog = new Fog(place.sky.getHex(), place.fog?.[0] ?? 18, place.fog?.[1] ?? 140);
 
       const robot = buildRobot();
-      robot.root.scale.setScalar(0.36);
+      robot.root.scale.setScalar(0.5);
       robot.root.position.set(num('rx', place.spawn.x), num('rY', place.spawn.y ?? 0), num('rz', place.spawn.z - 1.0));
       robot.root.rotation.y = num('ry', Math.PI);
       scene.add(robot.root);

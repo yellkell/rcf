@@ -44,7 +44,7 @@ everything, the places.
   button), a straight ray from the controller lands a marker on any
   walkable floor, release to step there with a quick fade. Snap turn on
   thumbstick x. Nothing smooth, nothing that makes anyone ill.
-- **THE COMPANION** stands ~0.9 m in front of you, on the floor, facing you,
+- **THE COMPANION** stands ~1.1 m in front of you, on the floor, facing you,
   and walks to keep station as you teleport — it arrives a beat
   after you do. Point at it and hold the wheel button: the **pose wheel**
   fans out around it (STAND · SIT · LIE · CROUCH · FLATTEN · CLING · PERISCOPE).
@@ -78,8 +78,8 @@ seam-safe cylindrical UVs the paint needs — and this one gains two arms
 (shoulder, elbow, hand) and two legs (hip, knee, foot), each segment a
 small loft and a paint surface, joints and hands and feet in the same
 white. ALL WHITE to begin with, and no face: nothing is on the blank that
-the paint did not put there. Authored at human size and scaled to about
-0.6 m, so it is a person you can pick up. The cuttlefish in the name is
+the paint did not put there. Authored at human size and scaled to half
+of it, about 0.85 m, so it is a person you can pick up. The cuttlefish in the name is
 the paint (cuttlefish match their backdrop). Poses are procedural: a
 record of joint angles per pose, tweened, no skeletons, no GLBs.
 

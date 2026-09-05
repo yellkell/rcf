@@ -270,8 +270,8 @@ export class CompanionSystem extends createSystem({}) {
     }
     // Park the wheel above the robot, facing you.
     robot.body.getWorldPosition(_p);
-    this.wheel.group.position.set(_p.x, _p.y + 0.5, _p.z);
-    this.wheel.group.lookAt(_head.x, _p.y + 0.5, _head.z);
+    this.wheel.group.position.set(_p.x, _p.y + 0.62, _p.z);
+    this.wheel.group.lookAt(_head.x, _p.y + 0.62, _head.z);
     // Hover: ray against the wheel plane, wedge by angle.
     const hand = this.wheelHand;
     aimRay(this.player, hand, _ray);
