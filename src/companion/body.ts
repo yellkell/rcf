@@ -15,7 +15,7 @@
  * Front is −z. The two eye turrets on the head track you: the chameleon.
  */
 
-import { BufferAttribute, BufferGeometry, Group, Mesh, MeshStandardMaterial, SphereGeometry } from 'three';
+import { BufferAttribute, BufferGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial, SphereGeometry } from 'three';
 
 export interface Ring {
   y: number;
@@ -103,7 +103,7 @@ function paintable(mesh: Mesh, part: string): Mesh {
 /** ff2 BODY_IK.headRadius. */
 const HEAD_R = 0.13;
 /** The head's centre above the hips when standing (ff2 NECK_SEAT). */
-const NECK_SEAT = 0.64;
+const NECK_SEAT = 0.63;
 
 /**
  * THE BODY — ff2's BODY_RINGS, hip-local (y = 0 is the pelvis centre),
@@ -147,7 +147,7 @@ function segment(len: number, r0: number, r1: number, mat: MeshStandardMaterial)
 }
 
 export const LIMB = {
-  hipX: 0.095,
+  hipX: 0.105,
   hipY: -0.055,
   thigh: 0.42,
   shin: 0.43,
@@ -204,6 +204,12 @@ export function buildRobot(): Robot {
   const head = new Group();
   head.name = 'head';
   head.position.set(0, NECK_SEAT, -0.03);
+  // THE NECK: a column from the shoulders up into the skull, leaning
+  // forward with the body's neck rings. White and unpainted, like a joint.
+  const neck = new Mesh(new CylinderGeometry(0.042, 0.052, 0.2, 14), steelMat());
+  neck.position.set(0, 0.5, -0.045);
+  neck.rotation.x = 0.16;
+  body.add(neck);
   const skull = paintable(new Mesh(new SphereGeometry(HEAD_R, 28, 22), shellMat()), 'head');
   skull.scale.set(0.84, 1.08, 0.93);
   skull.position.y = HEAD_R * 0.05;
@@ -217,17 +223,17 @@ export function buildRobot(): Robot {
   for (const side of [-1, 1] as const) {
     const shoulder = new Group();
     shoulder.position.set(side * LIMB.shoulderX, LIMB.shoulderY, 0);
-    shoulder.add(new Mesh(new SphereGeometry(0.04, 12, 8), steelMat()));
-    const upper = paintable(segment(LIMB.upperArm, 0.036, 0.03, armMat), 'arms');
+    shoulder.add(new Mesh(new SphereGeometry(0.056, 12, 8), steelMat()));
+    const upper = paintable(segment(LIMB.upperArm, 0.052, 0.044, armMat), 'arms');
     shoulder.add(upper);
     const elbow = new Group();
     elbow.position.y = -LIMB.upperArm;
-    elbow.add(new Mesh(new SphereGeometry(0.03, 12, 8), steelMat()));
-    const fore = paintable(segment(LIMB.forearm, 0.03, 0.024, armMat), 'arms');
+    elbow.add(new Mesh(new SphereGeometry(0.046, 12, 8), steelMat()));
+    const fore = paintable(segment(LIMB.forearm, 0.044, 0.036, armMat), 'arms');
     elbow.add(fore);
     const hand = new Group();
     hand.position.y = -LIMB.forearm;
-    const fist = new Mesh(new SphereGeometry(0.038, 12, 8), steelMat());
+    const fist = new Mesh(new SphereGeometry(0.05, 12, 8), steelMat());
     fist.scale.set(0.85, 1.1, 0.7);
     hand.add(fist);
     elbow.add(hand);
@@ -243,19 +249,19 @@ export function buildRobot(): Robot {
   for (const side of [-1, 1] as const) {
     const hip = new Group();
     hip.position.set(side * LIMB.hipX, LIMB.hipY, 0);
-    hip.add(new Mesh(new SphereGeometry(0.048, 12, 8), steelMat()));
-    const thigh = paintable(segment(LIMB.thigh, 0.05, 0.04, legMat), 'legs');
+    hip.add(new Mesh(new SphereGeometry(0.07, 12, 8), steelMat()));
+    const thigh = paintable(segment(LIMB.thigh, 0.072, 0.058, legMat), 'legs');
     hip.add(thigh);
     const knee = new Group();
     knee.position.y = -LIMB.thigh;
-    knee.add(new Mesh(new SphereGeometry(0.04, 12, 8), steelMat()));
-    const shin = paintable(segment(LIMB.shin, 0.04, 0.032, legMat), 'legs');
+    knee.add(new Mesh(new SphereGeometry(0.06, 12, 8), steelMat()));
+    const shin = paintable(segment(LIMB.shin, 0.06, 0.048, legMat), 'legs');
     knee.add(shin);
     const foot = new Group();
     foot.position.y = -LIMB.shin;
-    const sole = new Mesh(new SphereGeometry(0.05, 12, 8), steelMat());
-    sole.scale.set(1.0, LIMB.footH / 0.05, 1.7);
-    sole.position.set(0, -LIMB.footH * 0.5, -0.035);
+    const sole = new Mesh(new SphereGeometry(0.065, 12, 8), steelMat());
+    sole.scale.set(1.0, LIMB.footH / 0.065, 1.6);
+    sole.position.set(0, -LIMB.footH * 0.5, -0.04);
     foot.add(sole);
     knee.add(foot);
     hip.add(knee);
