@@ -26,7 +26,7 @@ const views = [
   ['cove-boat', 'place=cove&x=-1&y=2.4&z=2.5&yaw=0.9&pitch=-0.2&rx=-2.4&rY=0.9&rz=4.4&pose=sit'],
   ['cove-groyne', 'place=cove&x=-3&y=2.4&z=0&yaw=1.0&pitch=-0.05&rx=-5.8&rY=0.7&rz=1&pose=periscope'],
   ['cove-cliff', 'place=cove&x=0&y=2.4&z=2&yaw=3.1&pitch=0.15&rx=0&rY=1.0&rz=6&pose=stand'],
-  ['robot-closeup', 'place=garden&x=-0.8&y=0.8&z=3.3&yaw=0&pitch=-0.3&rx=-0.8&rz=2.2&ry=3.4&pose=stand'],
+  ['robot-closeup', 'place=garden&x=-0.8&y=0.8&z=3.3&yaw=0&pitch=-0.3&rx=-0.8&rz=2.2&ry=3.4&pose=stand&paint=none'],
   ['robot-lie', 'place=garden&x=-0.8&y=0.8&z=3.3&yaw=0&pitch=-0.35&rx=-0.8&rz=2.2&ry=2.4&pose=lie'],
   ['robot-crouch', 'place=garden&x=-0.8&y=0.8&z=3.3&yaw=0&pitch=-0.3&rx=-0.8&rz=2.2&ry=3.4&pose=crouch'],
   ['robot-periscope', 'place=garden&x=-0.8&y=0.8&z=3.3&yaw=0&pitch=-0.2&rx=-0.8&rz=2.2&ry=3.4&pose=periscope'],

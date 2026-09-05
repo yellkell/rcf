@@ -76,12 +76,12 @@ THE LITTLE GUY: FIRE FIGHT 2's blank, with legs. The egg head and the one
 body loft are ff2's mannequin verbatim — the same rings, the same
 seam-safe cylindrical UVs the paint needs — and this one gains two arms
 (shoulder, elbow, hand) and two legs (hip, knee, foot), each segment a
-small loft and a paint surface, with dark steel joints that never paint.
-Authored at human size and scaled to about 0.6 m, so it is a person you
-can pick up. The cuttlefish in the name is the paint (cuttlefish match
-their backdrop); the chameleon is the eyes, two turret domes on the head
-that track you. Poses are procedural: a record of joint angles per pose,
-tweened, no skeletons, no GLBs.
+small loft and a paint surface, joints and hands and feet in the same
+white. ALL WHITE to begin with, and no face: nothing is on the blank that
+the paint did not put there. Authored at human size and scaled to about
+0.6 m, so it is a person you can pick up. The cuttlefish in the name is
+the paint (cuttlefish match their backdrop). Poses are procedural: a
+record of joint angles per pose, tweened, no skeletons, no GLBs.
 
 ## The look
 

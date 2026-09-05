@@ -7,8 +7,8 @@
  * seam-safe cylindrical UVs, so the paint can wrap a stripe anywhere.
  * What FF2 never had, this one does: two ARMS (shoulder, elbow, a hand)
  * and two LEGS (hip, knee, a foot), each segment its own small loft and
- * a paint surface — arms share a sheet, legs share a sheet — with dark
- * steel joints that never paint.
+ * a paint surface — arms share a sheet, legs share a sheet — with the
+ * joints in the same white.
  *
  * Authored at FF2's human size (hips at 0.95 m); the companion system
  * scales the root down to a thing you can pick up (COMPANION.scale).
@@ -32,9 +32,13 @@ export function shellMat(): MeshStandardMaterial {
   return new MeshStandardMaterial({ color: 0xf4f2ee, roughness: 0.62, metalness: 0.04, envMapIntensity: 0.6 });
 }
 
-/** Joints, sockets, soles: dark steel, never painted. */
+/** Joints, hands, feet: the same white, never painted (one shared
+ *  material — these are spheres with no unwrap, and a shared paint sheet
+ *  would stamp a mark on every one of them at once). */
+let jointMat: MeshStandardMaterial | null = null;
 export function steelMat(): MeshStandardMaterial {
-  return new MeshStandardMaterial({ color: 0x23262b, roughness: 0.45, metalness: 0.7, envMapIntensity: 0.8 });
+  if (!jointMat) jointMat = new MeshStandardMaterial({ color: 0xf4f2ee, roughness: 0.62, metalness: 0.04, envMapIntensity: 0.6 });
+  return jointMat;
 }
 
 /**
@@ -168,10 +172,6 @@ export interface Arm {
   side: 1 | -1;
 }
 
-export interface Eye {
-  turret: Group;
-}
-
 export interface Robot {
   root: Group;
   /** The pelvis pivot: everything hangs off it. */
@@ -180,7 +180,6 @@ export interface Robot {
   head: Group;
   legs: Leg[];
   arms: Arm[];
-  eyes: Eye[];
   shells: Mesh[];
 }
 
@@ -207,24 +206,6 @@ export function buildRobot(): Robot {
   skull.position.y = HEAD_R * 0.05;
   head.add(skull);
   shells.push(skull);
-  const eyes: Eye[] = [];
-  for (const side of [-1, 1] as const) {
-    const turret = new Group();
-    turret.position.set(side * 0.052, 0.02, -HEAD_R * 0.86);
-    const socket = new Mesh(new SphereGeometry(0.03, 14, 10), steelMat());
-    turret.add(socket);
-    const lens = new Mesh(
-      new SphereGeometry(0.018, 12, 8),
-      new MeshStandardMaterial({ color: 0x0a0c10, roughness: 0.15, metalness: 0.2, envMapIntensity: 1.2 }),
-    );
-    lens.position.set(0, 0.002, -0.02);
-    turret.add(lens);
-    const glint = new Mesh(new SphereGeometry(0.006, 6, 4), new MeshStandardMaterial({ color: 0x2ee2c2, emissive: 0x2ee2c2, emissiveIntensity: 1.6 }));
-    glint.position.set(0, 0.005, -0.035);
-    turret.add(glint);
-    head.add(turret);
-    eyes.push({ turret });
-  }
   body.add(head);
 
   // THE ARMS.
@@ -288,5 +269,5 @@ export function buildRobot(): Robot {
     }
   });
 
-  return { root, body, head, legs, arms, eyes, shells };
+  return { root, body, head, legs, arms, shells };
 }

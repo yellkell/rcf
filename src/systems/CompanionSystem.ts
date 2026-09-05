@@ -16,7 +16,7 @@
  * let go against a wall or a ceiling and it STICKS — the robot rolls onto
  * the surface's normal and takes the CLING pose.
  *
- * EYES. The two turrets track your head, always. That is the chameleon.
+ * It has no face. It turns to face you all the same.
  */
 
 import { createSystem, InputComponent } from '@iwsdk/core';
@@ -162,7 +162,6 @@ export class CompanionSystem extends createSystem({}) {
     this.moving += (wantMoving - this.moving) * Math.min(1, delta * 9);
     this.gait = (this.gait + walked / GAIT_STRIDE) % 1;
     applyPose(robot, this.pose, this.gait, this.moving);
-    this.updateEyes();
     // The blob spreads as the body comes down, and fades when carried.
     // Lying figures cover more floor than standing ones.
     const spread = 1.8 - this.pose.bodyY * 1.1;
@@ -228,21 +227,6 @@ export class CompanionSystem extends createSystem({}) {
     let d = yaw - cur;
     d = Math.atan2(Math.sin(d), Math.cos(d));
     this.robot.root.rotation.y = cur + d * Math.min(1, delta * COMPANION.turnRate);
-  }
-
-  /* ── eyes ───────────────────────────────────────────────────────────── */
-
-  private updateEyes(): void {
-    const head = this.robot.head;
-    head.updateWorldMatrix(true, false);
-    for (const eye of this.robot.eyes) {
-      _p.copy(_head);
-      head.worldToLocal(_p);
-      _to.copy(_p).sub(eye.turret.position);
-      const yaw = Math.atan2(-_to.x, -_to.z);
-      const pitch = Math.atan2(_to.y, Math.hypot(_to.x, _to.z));
-      eye.turret.rotation.set(Math.max(-0.5, Math.min(0.9, pitch)), Math.max(-1.1, Math.min(1.1, yaw)), 0, 'YXZ');
-    }
   }
 
   /* ── poses ──────────────────────────────────────────────────────────── */

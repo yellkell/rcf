@@ -51,7 +51,7 @@ src/
     CompanionSystem.ts       station-keeping, the gait, the wheel, carry, stick, eyes
     PaintSystem.ts           the bay: tray panel + ray→uv place/lift/ghost on the robot
   companion/
-    body.ts                  ff2's blank (egg head + one body loft) with arms and legs, eye turrets
+    body.ts                  ff2's blank (egg head + one body loft) with arms and legs, all white
     poses.ts                 the seven poses as joint records
     rig.ts                   pose → groups, the walk
     paint.ts                 Look model, 8-byte wire, THE HAND, the canvas bake
