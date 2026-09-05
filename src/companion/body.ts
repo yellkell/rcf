@@ -15,7 +15,7 @@
  * Front is −z. The two eye turrets on the head track you: the chameleon.
  */
 
-import { BufferAttribute, BufferGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial, SphereGeometry } from 'three';
+import { BufferAttribute, BufferGeometry, Group, Mesh, MeshStandardMaterial, SphereGeometry } from 'three';
 
 export interface Ring {
   y: number;
@@ -111,8 +111,13 @@ const NECK_SEAT = 0.63;
  * the hip line, then a monotonic taper to a rounded tip.
  */
 const BODY_RINGS: Ring[] = [
-  { y: 0.488, w: 0.048, d: 0.043, z: -0.058 },
-  { y: 0.47, w: 0.058, d: 0.05, z: -0.045 },
+  // THE NECK — the loft's own, carried on up into the skull (the head's
+  // underside is at ~0.50), so neck and torso are one surface with no
+  // seam and no second part poking through it. Paint runs up it.
+  { y: 0.565, w: 0.046, d: 0.042, z: -0.064 },
+  { y: 0.525, w: 0.047, d: 0.043, z: -0.062 },
+  { y: 0.488, w: 0.05, d: 0.045, z: -0.058 },
+  { y: 0.47, w: 0.06, d: 0.052, z: -0.045 },
   { y: 0.45, w: 0.08, d: 0.062, z: -0.028 },
   { y: 0.425, w: 0.165, d: 0.078, z: -0.01 },
   { y: 0.395, w: 0.252, d: 0.09 },
@@ -204,12 +209,6 @@ export function buildRobot(): Robot {
   const head = new Group();
   head.name = 'head';
   head.position.set(0, NECK_SEAT, -0.03);
-  // THE NECK: a column from the shoulders up into the skull, leaning
-  // forward with the body's neck rings. White and unpainted, like a joint.
-  const neck = new Mesh(new CylinderGeometry(0.042, 0.052, 0.2, 14), steelMat());
-  neck.position.set(0, 0.5, -0.045);
-  neck.rotation.x = 0.16;
-  body.add(neck);
   const skull = paintable(new Mesh(new SphereGeometry(HEAD_R, 28, 22), shellMat()), 'head');
   skull.scale.set(0.84, 1.08, 0.93);
   skull.position.y = HEAD_R * 0.05;
