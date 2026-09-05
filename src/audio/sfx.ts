@@ -143,3 +143,26 @@ export function grab(): void {
 export function drop(): void {
   tone({ freq: 560, to: 380, type: 'triangle', dur: 0.06, gain: 0.08 });
 }
+
+/** The gun: a sharp crack over a low thump. */
+export function shot(): void {
+  noise(0.09, 0.32, 3600, 700);
+  tone({ freq: 180, to: 50, type: 'square', dur: 0.12, gain: 0.16 });
+}
+
+/** Empty: a dry click. */
+export function dryFire(): void {
+  tone({ freq: 2200, to: 1400, type: 'square', dur: 0.025, gain: 0.08 });
+}
+
+/** A find: a rising two-note sting. */
+export function found(): void {
+  tone({ freq: 520, to: 780, type: 'triangle', dur: 0.12, gain: 0.16 });
+  tone({ freq: 780, to: 1040, type: 'triangle', dur: 0.2, gain: 0.14, delay: 0.1 });
+}
+
+/** A miss landing on the world: a dull chip. */
+export function ricochet(): void {
+  noise(0.05, 0.12, 2000, 5000);
+  tone({ freq: 900, to: 300, type: 'sine', dur: 0.05, gain: 0.05 });
+}

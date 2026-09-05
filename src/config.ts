@@ -72,6 +72,21 @@ export const COMPANION = {
 } as const;
 
 /**
+ * THE GUN — the seeker's tag. Five shots a round: a hit finds a robot, a
+ * miss is loud and gone. Camouflage is only worth painting if a seeker
+ * cannot shoot every bush, so the magazine IS the rule.
+ */
+export const GUN = {
+  shots: 5,
+  /** Seconds between shots. */
+  cooldown: 0.35,
+  /** How far a shot reaches (m). */
+  range: 40,
+  /** Seconds the tracer and the flash stay up. */
+  tracerSeconds: 0.14,
+} as const;
+
+/**
  * THE PAINT (ff2/docs/paint.md) — the blank takes colour from placed
  * stripes, splotches, dots and squares. Same discipline as FIRE FIGHT 2:
  * colour is an index into a sold palette, every field is quantized to a

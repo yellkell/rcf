@@ -124,6 +124,17 @@ export const POSES: Record<PoseId, Pose> = {
   },
 };
 
+/** FOUND: a seeker's shot landed. A crumple, face down, limbs loose — not
+ *  on the wheel; the game puts it here and takes it away. */
+export const KO_POSE: Pose = {
+  bodyY: 0.12,
+  pitch: d(84),
+  lean: d(10),
+  headPitch: d(-20),
+  leg: { swing: d(18), splay: d(14), knee: d(40) },
+  arm: { swing: d(30), raise: d(50), elbow: d(60) },
+};
+
 export function clonePose(p: Pose): Pose {
   return { ...p, leg: { ...p.leg }, arm: { ...p.arm } };
 }

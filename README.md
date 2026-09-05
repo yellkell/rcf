@@ -24,6 +24,9 @@ the paint second, the seeking third) and how it is meant to feel.
 | **Trigger** on the robot, unit held | Place the unit (the ghost under the ray is where it lands) |
 | **Trigger** on placed paint, empty hand | Lift it back into your hand |
 | Thumbstick while a unit hovers the robot | x twists, y sizes, grip + y sets a stripe's width |
+| Tray **PLAY: SEEK** | Switch to seeking: the tray and wheel go away, a pistol rides your right hand |
+| **Trigger** (seeking) | Fire. **Five shots a round.** A robot shell in the way is FOUND and crumples; a miss chips the world, loud |
+| **B** with the gun out | Back to hiding: the gun holsters and reloads, a found robot stands back up |
 
 ## Run it
 
@@ -50,6 +53,8 @@ src/
     TeleportSystem.ts        the step (ff2's ClubTeleportSystem over raycast floors)
     CompanionSystem.ts       station-keeping, the gait, the wheel, carry, stick, eyes
     PaintSystem.ts           the bay: tray panel + ray→uv place/lift/ghost on the robot
+    GunSystem.ts             the seeker's pistol: five shots, ray vs shells, KO on a hit
+  game/state.ts              the round phase (hide | seek), until the room clock owns it
   companion/
     body.ts                  ff2's blank (egg head + one body loft) with arms and legs, all white
     poses.ts                 the seven poses as joint records

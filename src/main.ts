@@ -15,6 +15,8 @@ import { FOVEATION } from './config.js';
 import { CompanionSystem, companion } from './systems/CompanionSystem.js';
 import { EnvironmentSystem, environmentView } from './systems/EnvironmentSystem.js';
 import { PaintSystem, paintView } from './systems/PaintSystem.js';
+import { GunSystem, gunView } from './systems/GunSystem.js';
+import { game, setPhase } from './game/state.js';
 import { TeleportSystem, teleportView } from './systems/TeleportSystem.js';
 
 const container = document.getElementById('scene-container') as HTMLDivElement;
@@ -57,6 +59,7 @@ World.create(container, {
   world.registerSystem(TeleportSystem);
   world.registerSystem(CompanionSystem);
   world.registerSystem(PaintSystem);
+  world.registerSystem(GunSystem);
 
   // The dev window: every verb the controllers drive, headless (`__rcf`).
   (window as unknown as { __rcf: unknown }).__rcf = {
@@ -64,6 +67,9 @@ World.create(container, {
     move: teleportView,
     env: environmentView,
     companion,
+    game,
+    setPhase,
+    gun: gunView,
     paint: {
       demo: () => setLook(demoLook()),
       clear: () => clearLook(),

@@ -24,7 +24,8 @@ import { CanvasTexture, CircleGeometry, Matrix4, Mesh, MeshBasicMaterial, Quater
 import * as sfx from '../audio/sfx.js';
 import { buildRobot, type Robot } from '../companion/body.js';
 import { applyLook, myLook, paintState } from '../companion/paint.js';
-import { POSES, POSE_IDS, POSE_LABEL, chasePose, clonePose, type Pose, type PoseId } from '../companion/poses.js';
+import { KO_POSE, POSES, POSE_IDS, POSE_LABEL, chasePose, clonePose, type Pose, type PoseId } from '../companion/poses.js';
+import { game } from '../game/state.js';
 import { GAIT_STRIDE, applyPose } from '../companion/rig.js';
 import { COMPANION } from '../config.js';
 import { currentPlace, onPlaceChange, type Place } from '../env/place.js';
@@ -76,6 +77,10 @@ export const companion: {
   follow: () => void;
   /** The wheel's current wedge label, for the HUD probes. */
   wheelOpen: boolean;
+  /** A seeker's shot landed: it lies where it was found. */
+  found: boolean;
+  knockOut: () => void;
+  revive: () => void;
 } = {
   robot: null,
   state: 'free',
@@ -84,6 +89,9 @@ export const companion: {
   setPose: () => undefined,
   follow: () => undefined,
   wheelOpen: false,
+  found: false,
+  knockOut: () => undefined,
+  revive: () => undefined,
 };
 
 export class CompanionSystem extends createSystem({}) {
@@ -117,6 +125,8 @@ export class CompanionSystem extends createSystem({}) {
     companion.robot = this.robot;
     companion.setPose = (id) => this.setPose(id);
     companion.follow = () => this.follow();
+    companion.knockOut = () => this.knockOut();
+    companion.revive = () => this.revive();
 
     this.wheel = new Panel('wheel', 0.56, 0.56, 512, 512, (g, W, H, hover) => this.drawWheel(g, W, H, hover));
     this.scene.add(this.wheel.group);
@@ -149,11 +159,20 @@ export class CompanionSystem extends createSystem({}) {
     this.player.head.getWorldQuaternion(_q);
     _fwd.set(0, 0, -1).applyQuaternion(_q);
 
-    this.updateGrab();
-    this.updateWheel(delta);
+    // Found robots lie where they fell; seekers have no wheel and no hands
+    // for it.
+    const canHandle = game.phase === 'hide' && !companion.found;
+    if (canHandle) {
+      this.updateGrab();
+      this.updateWheel(delta);
+    } else {
+      this.wheel.visible = false;
+      companion.wheelOpen = false;
+      this.wheelHand = null;
+    }
 
     let walked = 0;
-    if (companion.state === 'free') walked = this.updateStation(delta);
+    if (companion.state === 'free' && !companion.found) walked = this.updateStation(delta);
 
     // Tween the pose and drive the rig.
     const k = 1 - Math.exp(-delta / (COMPANION.poseSeconds * 0.35));
@@ -235,6 +254,25 @@ export class CompanionSystem extends createSystem({}) {
     companion.poseId = id;
     companion.following = false;
     this.target = POSES[id];
+    sfx.servo();
+  }
+
+  private knockOut(): void {
+    if (companion.found) return;
+    companion.found = true;
+    companion.following = false;
+    if (companion.state === 'held') {
+      this.heldBy = null;
+      this.release();
+    }
+    this.target = KO_POSE;
+    sfx.servo(0.2);
+  }
+
+  private revive(): void {
+    if (!companion.found) return;
+    companion.found = false;
+    this.target = POSES[companion.poseId];
     sfx.servo();
   }
 

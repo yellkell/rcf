@@ -40,6 +40,7 @@ import { HANDS, PointerRay, aimRay, type Hand } from '../input/rays.js';
 import { Panel, PAPER, SIGNAL, chip, label, plateBg, type PanelButton } from '../ui/panel.js';
 import { companion } from './CompanionSystem.js';
 import { environmentView } from './EnvironmentSystem.js';
+import { game, setPhase } from '../game/state.js';
 
 const _ray = new Raycaster();
 const _head = new Vector3();
@@ -71,6 +72,19 @@ export class PaintSystem extends createSystem({}) {
     const robot = companion.robot;
     if (!robot) return;
     this.player.head.getWorldPosition(_head);
+
+    // Seekers do not paint: the tray shuts, the hand empties, the ray rests.
+    if (game.phase === 'seek') {
+      if (bay.held) handReturn();
+      if (this.tray.visible) {
+        this.tray.visible = false;
+        paintView.trayOpen = false;
+      }
+      if (this.ghostOn) this.rebake();
+      for (const hand of HANDS) this.pointers[hand].hide();
+      if (paintState.version !== this.lookVersion) this.rebake();
+      return;
+    }
 
     // The tray: B/Y toggles it (or drops a held unit).
     for (const hand of HANDS) {
@@ -210,6 +224,12 @@ export class PaintSystem extends createSystem({}) {
       clearLook();
       handReturn();
       sfx.paintLift();
+    } else if (id === 'seek') {
+      handReturn();
+      this.tray.visible = false;
+      paintView.trayOpen = false;
+      setPhase('seek');
+      sfx.uiClick();
     } else if (id === 'place') {
       handReturn();
       this.tray.visible = false;
@@ -286,16 +306,17 @@ export class PaintSystem extends createSystem({}) {
     label(g, held ? 'point at the robot · stick twists and sizes · trigger places' : 'trigger on placed paint lifts it back up', W / 2, y + 46, 19, 'rgba(231,244,241,0.55)');
     y += 76;
 
-    const bw = (W - 80 - 42) / 4;
+    const bw = (W - 80 - 56) / 5;
     const row: [string, string][] = [
       ['drop', 'DROP UNIT'],
       ['clear', 'CLEAR ALL'],
       ['place', 'NEXT PLACE'],
+      ['seek', 'PLAY: SEEK'],
       ['close', 'CLOSE'],
     ];
     row.forEach(([id, text], i) => {
       const b: PanelButton = { id, x: 40 + i * (bw + 14), y: H - 96, w: bw, h: 62 };
-      chip(g, b, text, false, hover === b.id, 22);
+      chip(g, b, text, false, hover === b.id, 20);
       out.push(b);
     });
     void y;

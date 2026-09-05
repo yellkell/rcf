@@ -66,6 +66,26 @@ try {
     out.robotAfter = robot.root.position.toArray().map((n) => +n.toFixed(2));
     out.dist = +Math.hypot(out.robotAfter[0] - out.after[0], out.robotAfter[2] - out.after[2]).toFixed(2);
     h.paint.clear();
+    // The gun: five shots. Aim at the robot's body: found on the first,
+    // then four misses into the world, then empty.
+    h.setPhase('seek');
+    await sleep(100);
+    const bp = { x: 0, y: 0, z: 0 };
+    { const v = robot.body.getWorldPosition(robot.body.position.clone()); bp.x = v.x; bp.y = v.y; bp.z = v.z; }
+    // No XR head off-device, so the probe supplies the muzzle: a metre
+    // above and behind the robot.
+    const from = [bp.x, bp.y + 1.0, bp.z + 1.2];
+    out.shot1 = h.gun.fireAt(bp.x, bp.y, bp.z, from);
+    out.foundAfter = h.companion.found;
+    for (const k of [2, 3, 4, 5, 6]) {
+      await sleep(450);
+      out['shot' + k] = h.gun.fireAt(bp.x + 0.5, -5, bp.z + 1.5, from); // into the lawn
+    }
+    out.shotsLeft = h.gun.shots;
+    h.setPhase('hide');
+    await sleep(100);
+    out.revived = !h.companion.found;
+    out.reloaded = h.gun.shots;
     return out;
   });
   console.log(JSON.stringify(r));
@@ -77,6 +97,9 @@ try {
   check(r.mapInstalled, 'the bake installed the map');
   check(Math.abs(r.after[0] - 2) < 0.5 && Math.abs(r.after[2] - 2) < 0.5, 'the step moved the rig');
   check(r.dist > 0.3 && r.dist < 2.0, `the robot walked to station (${r.dist} m from the head)`);
+  check(r.shot1 === 'robot' && r.foundAfter === true, 'a shot on the robot finds it');
+  check(r.shot2 === 'world' && r.shot5 === 'world' && r.shot6 === 'empty' && r.shotsLeft === 0, 'five shots, then empty');
+  check(r.revived && r.reloaded === 5, 'back to hiding revives the robot and reloads');
   check(errors.length === 0, errors.length ? 'page errors:\n' + errors.join('\n') : 'no page errors');
   await browser.close();
 } finally {
