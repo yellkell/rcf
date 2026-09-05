@@ -1,16 +1,132 @@
 rules_version = '2';
+
+// ROBOT CUTTLEFISH — Firestore is the whole wire. No relay, no WebRTC:
+// rooms, players, robot placements, finds and rig poses all live here.
+//
+// Identity is anonymous auth (enable it in the console: Authentication →
+// Sign-in method → Anonymous). Every document a player owns is named after
+// their uid, and only that uid may write it. A room code is the only
+// secret: knowing it lets you read the room and join it; only the host
+// may move the clock.
+//
+// Layout:
+//   rcfPlayers/{uid}                     name · look · tone · found · hidden
+//   rooms/{code}                         host · phase · phaseEndsAt · round ·
+//                                        places {a,b} · createdAt
+//   rooms/{code}/players/{uid}           name · team · look · joinedAt · seenAt
+//   rooms/{code}/robots/{uid}            the placement: p[3] · q[4] · pose ·
+//                                        look · place · carried · updatedAt
+//   rooms/{code}/finds/{findId}          by · robot · at   (create-only)
+//   rooms/{code}/rigs/{uid}              head/hands pose, a few Hz, owner-only
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // A player's document is named after their anonymous uid: anyone may
-    // read it (names and looks are public by design), only they may write.
+
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isMe(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    function str(field, max) {
+      return request.resource.data[field] is string && request.resource.data[field].size() <= max;
+    }
+    function optStr(field, max) {
+      return !(field in request.resource.data) || str(field, max);
+    }
+    function num(field) {
+      return request.resource.data[field] is number;
+    }
+    function optNum(field) {
+      return !(field in request.resource.data) || num(field);
+    }
+    function isHost(code) {
+      return signedIn() && get(/databases/$(database)/documents/rooms/$(code)).data.host == request.auth.uid;
+    }
+    function inRoom(code) {
+      return signedIn() && exists(/databases/$(database)/documents/rooms/$(code)/players/$(request.auth.uid));
+    }
+    function code(c) {
+      return c.matches('^[0-9]{4}$');
+    }
+
+    // ── the profile ───────────────────────────────────────────────────
     match /rcfPlayers/{uid} {
       allow read: if true;
-      allow create, update: if request.auth != null && request.auth.uid == uid
+      allow create, update: if isMe(uid)
         && request.resource.data.keys().hasOnly(['name', 'look', 'tone', 'found', 'hidden', 'updatedAt'])
-        && request.resource.data.get('look', '').size() <= 1200
-        && request.resource.data.get('name', '').size() <= 24;
+        && optStr('name', 24) && optStr('look', 1200) && optStr('tone', 8)
+        && optNum('found') && optNum('hidden');
       allow delete: if false;
     }
+
+    // ── the room ──────────────────────────────────────────────────────
+    match /rooms/{roomCode} {
+      // Anyone signed in with the code may read it.
+      allow read: if signedIn() && code(roomCode);
+      // Anyone may open a room; the opener is its host.
+      allow create: if signedIn() && code(roomCode)
+        && request.resource.data.host == request.auth.uid
+        && request.resource.data.keys().hasOnly(['host', 'phase', 'phaseEndsAt', 'round', 'places', 'createdAt', 'hideSeconds', 'seekSeconds'])
+        && request.resource.data.phase == 'lobby'
+        && request.resource.data.places is map;
+      // Only the host moves the clock, and the host cannot be handed off.
+      allow update: if isHost(roomCode)
+        && request.resource.data.host == resource.data.host
+        && request.resource.data.phase in ['lobby', 'hide', 'seek', 'end']
+        && optNum('phaseEndsAt') && optNum('round') && optNum('hideSeconds') && optNum('seekSeconds');
+      allow delete: if isHost(roomCode);
+
+      // ── players: your own seat, nobody else's ─────────────────────
+      match /players/{uid} {
+        allow read: if signedIn();
+        allow create, update: if isMe(uid)
+          && request.resource.data.keys().hasOnly(['name', 'team', 'look', 'joinedAt', 'seenAt'])
+          && str('name', 24) && request.resource.data.team in ['a', 'b']
+          && optStr('look', 1200) && optNum('joinedAt') && optNum('seenAt');
+        // You may leave; the host may kick.
+        allow delete: if isMe(uid) || isHost(roomCode);
+      }
+
+      // ── robots: where you put yours ───────────────────────────────
+      match /robots/{uid} {
+        allow read: if inRoom(roomCode);
+        allow create, update: if isMe(uid) && inRoom(roomCode)
+          && request.resource.data.keys().hasOnly(['p', 'q', 'pose', 'look', 'place', 'carried', 'updatedAt'])
+          && request.resource.data.p is list && request.resource.data.p.size() == 3
+          && request.resource.data.q is list && request.resource.data.q.size() == 4
+          && str('pose', 12) && optStr('look', 1200) && str('place', 16)
+          && request.resource.data.carried is bool && num('updatedAt');
+        allow delete: if isMe(uid) || isHost(roomCode);
+      }
+
+      // ── finds: a seeker's tag on a robot. Create-only: the tagged
+      //    player cannot erase it, and neither can the finder change it.
+      match /finds/{findId} {
+        allow read: if inRoom(roomCode);
+        allow create: if inRoom(roomCode)
+          && request.resource.data.keys().hasOnly(['by', 'robot', 'at', 'place'])
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.robot is string
+          && request.resource.data.robot != request.auth.uid
+          && exists(/databases/$(database)/documents/rooms/$(roomCode)/robots/$(request.resource.data.robot))
+          && num('at') && optStr('place', 16);
+        allow update, delete: if false;
+      }
+
+      // ── rigs: head + hands, a few times a second, yours only ──────
+      match /rigs/{uid} {
+        allow read: if inRoom(roomCode);
+        allow create, update: if isMe(uid) && inRoom(roomCode)
+          && request.resource.data.keys().hasOnly(['h', 'l', 'r', 'place', 'at'])
+          && request.resource.data.h is list && request.resource.data.h.size() == 7
+          && request.resource.data.l is list && request.resource.data.l.size() == 7
+          && request.resource.data.r is list && request.resource.data.r.size() == 7
+          && str('place', 16) && num('at');
+        allow delete: if isMe(uid) || isHost(roomCode);
+      }
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
