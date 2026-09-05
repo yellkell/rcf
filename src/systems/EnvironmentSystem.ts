@@ -12,16 +12,21 @@ import { createSystem } from '@iwsdk/core';
 import { Fog, PMREMGenerator, type Scene } from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { buildGarden } from '../env/garden.js';
+import { buildWorkshop } from '../env/workshop.js';
+import { buildCove } from '../env/cove.js';
 import { setPlace, type Place } from '../env/place.js';
 import { teleportPlayer } from './TeleportSystem.js';
 
-export type PlaceId = 'garden';
+export type PlaceId = 'garden' | 'workshop' | 'cove';
+export const PLACE_IDS: readonly PlaceId[] = ['garden', 'workshop', 'cove'];
 
 const BUILDERS: Record<PlaceId, () => Place> = {
   garden: buildGarden,
+  workshop: buildWorkshop,
+  cove: buildCove,
 };
 
-export const environmentView: { load?: (id: PlaceId) => void; current?: () => PlaceId | null } = {};
+export const environmentView: { load?: (id: PlaceId) => void; next?: () => void; current?: () => PlaceId | null } = {};
 
 export class EnvironmentSystem extends createSystem({}) {
   private place: Place | null = null;
@@ -37,6 +42,7 @@ export class EnvironmentSystem extends createSystem({}) {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.autoUpdate = false;
     environmentView.load = (id) => this.load(id);
+    environmentView.next = () => this.load(PLACE_IDS[(PLACE_IDS.indexOf(this.id ?? 'garden') + 1) % PLACE_IDS.length]);
     environmentView.current = () => this.id;
     this.load('garden');
   }
@@ -53,7 +59,7 @@ export class EnvironmentSystem extends createSystem({}) {
     this.scene.add(place.root);
     const scene = this.scene as Scene;
     scene.background = place.sky;
-    scene.fog = new Fog(place.sky.getHex(), 18, 140);
+    scene.fog = new Fog(place.sky.getHex(), place.fog?.[0] ?? 18, place.fog?.[1] ?? 140);
     this.shadowsBaked = false;
     setPlace(place);
     teleportPlayer(this.player, place.spawn.x, place.spawn.z, place.spawn.yaw, place.spawn.y ?? 0);

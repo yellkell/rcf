@@ -39,6 +39,7 @@ import { currentPlace } from '../env/place.js';
 import { HANDS, PointerRay, aimRay, type Hand } from '../input/rays.js';
 import { Panel, PAPER, SIGNAL, chip, label, plateBg, type PanelButton } from '../ui/panel.js';
 import { companion } from './CompanionSystem.js';
+import { environmentView } from './EnvironmentSystem.js';
 
 const _ray = new Raycaster();
 const _head = new Vector3();
@@ -209,6 +210,12 @@ export class PaintSystem extends createSystem({}) {
       clearLook();
       handReturn();
       sfx.paintLift();
+    } else if (id === 'place') {
+      handReturn();
+      this.tray.visible = false;
+      paintView.trayOpen = false;
+      environmentView.next?.();
+      sfx.step();
     } else if (id === 'close') {
       this.tray.visible = false;
       paintView.trayOpen = false;
@@ -279,10 +286,11 @@ export class PaintSystem extends createSystem({}) {
     label(g, held ? 'point at the robot · stick twists and sizes · trigger places' : 'trigger on placed paint lifts it back up', W / 2, y + 46, 19, 'rgba(231,244,241,0.55)');
     y += 76;
 
-    const bw = (W - 80 - 28) / 3;
+    const bw = (W - 80 - 42) / 4;
     const row: [string, string][] = [
       ['drop', 'DROP UNIT'],
       ['clear', 'CLEAR ALL'],
+      ['place', 'NEXT PLACE'],
       ['close', 'CLOSE'],
     ];
     row.forEach(([id, text], i) => {

@@ -310,3 +310,208 @@ export function surfaced(s: { map: CanvasTexture; bump: CanvasTexture }, o: Surf
     envMapIntensity: o.envMapIntensity ?? 0.5,
   });
 }
+
+/* ── indoors ─────────────────────────────────────────────────────────── */
+
+/** Concrete floor: trowel marks, a control joint, oil and rust stains. */
+export function concrete(): { map: CanvasTexture; bump: CanvasTexture } {
+  const hit = cache.get('concrete');
+  if (hit) return hit;
+  const size = 512;
+  const rng = makeRng(2211);
+  const noise = valueNoise2D(rng, 8);
+  const draw = (g: CanvasRenderingContext2D, height: boolean): void => {
+    const img = g.createImageData(size, size);
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const n = noise((x / size) * 8, (y / size) * 8) * 0.5 + noise((x / size) * 32, (y / size) * 32) * 0.3 + rng() * 0.2;
+        const i = (y * size + x) * 4;
+        const v = height ? 110 + n * 60 : 118 + n * 46;
+        img.data[i] = v;
+        img.data[i + 1] = height ? v : v - 2;
+        img.data[i + 2] = height ? v : v - 8;
+        img.data[i + 3] = 255;
+      }
+    }
+    g.putImageData(img, 0, 0);
+    // The joint, a saw cut across the slab.
+    g.fillStyle = height ? '#303030' : 'rgba(40,38,36,0.8)';
+    g.fillRect(0, size / 2 - 3, size, 6);
+    g.fillRect(size / 2 - 3, 0, 6, size);
+    if (!height) {
+      for (let k = 0; k < 7; k++) {
+        const x = rng() * size;
+        const y = rng() * size;
+        const r = 20 + rng() * 60;
+        const grad = g.createRadialGradient(x, y, 0, x, y, r);
+        grad.addColorStop(0, 'rgba(20,18,16,0.55)');
+        grad.addColorStop(1, 'rgba(20,18,16,0)');
+        g.fillStyle = grad;
+        g.beginPath();
+        g.ellipse(x, y, r, r * (0.6 + rng() * 0.5), rng() * 3, 0, Math.PI * 2);
+        g.fill();
+      }
+      for (let k = 0; k < 4; k++) {
+        g.fillStyle = 'rgba(130,70,30,0.22)';
+        g.beginPath();
+        g.arc(rng() * size, rng() * size, 6 + rng() * 14, 0, Math.PI * 2);
+        g.fill();
+      }
+    }
+  };
+  const out = { map: makeCanvasTexture(size, (g) => draw(g, false)), bump: makeBumpTexture(size, (g) => draw(g, true)) };
+  cache.set('concrete', out);
+  return out;
+}
+
+/** Painted breeze-block: running bond, chipped paint, a grime line. */
+export function blockwall(): { map: CanvasTexture; bump: CanvasTexture } {
+  const hit = cache.get('blockwall');
+  if (hit) return hit;
+  const size = 512;
+  const rng = makeRng(3311);
+  const rows = 6;
+  const bh = size / rows;
+  const bw = bh * 2;
+  const draw = (g: CanvasRenderingContext2D, height: boolean): void => {
+    g.fillStyle = height ? '#404040' : '#8d8f8a';
+    g.fillRect(0, 0, size, size);
+    for (let r = 0; r < rows; r++) {
+      const off = r % 2 ? bw / 2 : 0;
+      for (let x = -bw; x < size + bw; x += bw) {
+        const t = rng();
+        const m = 4;
+        g.fillStyle = height ? `rgb(${150 + t * 40},${150 + t * 40},${150 + t * 40})` : hsl(80, 4 + t * 4, 62 + t * 10);
+        g.fillRect(x + off + m, r * bh + m, bw - 2 * m, bh - 2 * m);
+        if (!height) {
+          for (let k = 0; k < 40; k++) {
+            g.fillStyle = `rgba(0,0,0,${0.03 + rng() * 0.07})`;
+            g.fillRect(x + off + m + rng() * (bw - 2 * m), r * bh + m + rng() * (bh - 2 * m), 2 + rng() * 5, 1 + rng() * 2);
+          }
+          if (rng() < 0.15) {
+            g.fillStyle = 'rgba(96,98,92,0.7)'; // a chip down to the block
+            g.beginPath();
+            g.arc(x + off + m + rng() * bw * 0.8, r * bh + m + rng() * bh * 0.8, 3 + rng() * 6, 0, Math.PI * 2);
+            g.fill();
+          }
+        }
+      }
+    }
+  };
+  const out = { map: makeCanvasTexture(size, (g) => draw(g, false)), bump: makeBumpTexture(size, (g) => draw(g, true)) };
+  cache.set('blockwall', out);
+  return out;
+}
+
+/** Corrugated galvanised sheet, with rust bleeding from the fixings. */
+export function corrugated(): { map: CanvasTexture; bump: CanvasTexture } {
+  const hit = cache.get('corrugated');
+  if (hit) return hit;
+  const size = 512;
+  const rng = makeRng(4411);
+  const draw = (g: CanvasRenderingContext2D, height: boolean): void => {
+    const ridges = 12;
+    for (let x = 0; x < size; x++) {
+      const t = 0.5 + 0.5 * Math.sin((x / size) * Math.PI * 2 * ridges);
+      const v = height ? 90 + t * 130 : 118 + t * 50;
+      g.fillStyle = height ? `rgb(${v},${v},${v})` : `rgb(${v},${v + 3},${v + 6})`;
+      g.fillRect(x, 0, 1, size);
+    }
+    if (!height) {
+      for (let k = 0; k < 800; k++) {
+        g.fillStyle = `rgba(255,255,255,${rng() * 0.08})`;
+        g.fillRect(rng() * size, rng() * size, 2, 2);
+      }
+      for (let k = 0; k < 14; k++) {
+        const x = Math.floor(rng() * ridges) * (size / ridges) + size / ridges / 2;
+        const y = rng() * size;
+        g.fillStyle = 'rgba(40,40,44,0.8)';
+        g.beginPath();
+        g.arc(x, y, 3, 0, Math.PI * 2);
+        g.fill();
+        const grad = g.createLinearGradient(0, y, 0, y + 60 + rng() * 80);
+        grad.addColorStop(0, 'rgba(150,70,30,0.5)');
+        grad.addColorStop(1, 'rgba(150,70,30,0)');
+        g.fillStyle = grad;
+        g.fillRect(x - 4, y, 8, 140);
+      }
+    }
+  };
+  const out = { map: makeCanvasTexture(size, (g) => draw(g, false)), bump: makeBumpTexture(size, (g) => draw(g, true)) };
+  cache.set('corrugated', out);
+  return out;
+}
+
+/** Pegboard with tools hung on it, painted as silhouettes with outlines
+ *  chalked round them — the tidy workshop's wall. */
+export function pegboard(): { map: CanvasTexture; bump: CanvasTexture } {
+  const hit = cache.get('pegboard');
+  if (hit) return hit;
+  const size = 512;
+  const rng = makeRng(5511);
+  const draw = (g: CanvasRenderingContext2D, height: boolean): void => {
+    g.fillStyle = height ? '#808080' : '#c9b48a';
+    g.fillRect(0, 0, size, size);
+    // The holes.
+    g.fillStyle = height ? '#303030' : '#6b5a3c';
+    for (let y = 12; y < size; y += 20) for (let x = 12; x < size; x += 20) {
+      g.beginPath();
+      g.arc(x, y, 2.4, 0, Math.PI * 2);
+      g.fill();
+    }
+    if (height) return;
+    const tool = (draw: () => void, x: number, y: number, rot: number): void => {
+      g.save();
+      g.translate(x, y);
+      g.rotate(rot);
+      g.strokeStyle = 'rgba(255,255,255,0.6)';
+      g.lineWidth = 3;
+      g.setLineDash([5, 4]);
+      g.beginPath();
+      draw();
+      g.stroke();
+      g.setLineDash([]);
+      g.fillStyle = '#2b2e33';
+      g.fill();
+      g.restore();
+    };
+    // Hammer, spanner ×2, saw, screwdrivers, pliers.
+    tool(() => { g.rect(-6, -60, 12, 120); g.rect(-30, -70, 60, 22); }, 90, 140, 0.1);
+    for (let i = 0; i < 2; i++) tool(() => { g.rect(-5, -50, 10, 100); g.arc(0, -56, 16, 0, Math.PI * 2); g.arc(0, 56, 14, 0, Math.PI * 2); }, 190 + i * 60, 150, -0.15 + i * 0.1);
+    tool(() => { g.moveTo(-90, -20); g.lineTo(90, -20); g.lineTo(90, 0); g.lineTo(-40, 18); g.lineTo(-90, 10); g.closePath(); g.rect(-130, -30, 40, 40); }, 360, 130, 0.5);
+    for (let i = 0; i < 4; i++) tool(() => { g.rect(-4, -45, 8, 60); g.rect(-9, 15, 18, 40); }, 80 + i * 40, 330, (rng() - 0.5) * 0.2);
+    tool(() => { g.moveTo(-8, -50); g.lineTo(8, -50); g.lineTo(20, 20); g.lineTo(4, 60); g.lineTo(-4, 60); g.lineTo(-20, 20); g.closePath(); }, 300, 340, 0.2);
+    tool(() => { g.rect(-40, -12, 80, 24); }, 420, 360, 0);
+    tool(() => { g.arc(0, 0, 30, 0, Math.PI * 2); g.rect(-6, 20, 12, 60); }, 440, 240, 0);
+  };
+  const out = { map: makeCanvasTexture(size, (g) => draw(g, false)), bump: makeBumpTexture(size, (g) => draw(g, true)) };
+  cache.set('pegboard', out);
+  return out;
+}
+
+/** Cardboard: kraft with a tape strip and a printed label block. */
+export function cardboard(): { map: CanvasTexture; bump: CanvasTexture } {
+  const hit = cache.get('cardboard');
+  if (hit) return hit;
+  const size = 256;
+  const rng = makeRng(6611);
+  const draw = (g: CanvasRenderingContext2D, height: boolean): void => {
+    g.fillStyle = height ? '#707070' : '#b48e5e';
+    g.fillRect(0, 0, size, size);
+    for (let k = 0; k < 2000; k++) {
+      g.fillStyle = height ? `rgba(0,0,0,${rng() * 0.1})` : `rgba(90,60,30,${rng() * 0.12})`;
+      g.fillRect(rng() * size, rng() * size, 1 + rng() * 6, 1);
+    }
+    if (!height) {
+      g.fillStyle = 'rgba(170,150,120,0.55)';
+      g.fillRect(size * 0.44, 0, size * 0.12, size); // tape
+      g.fillStyle = 'rgba(40,40,40,0.75)';
+      g.fillRect(20, 30, 70, 40);
+      g.fillStyle = 'rgba(40,40,40,0.55)';
+      for (let i = 0; i < 4; i++) g.fillRect(20, 84 + i * 10, 30 + rng() * 50, 4);
+    }
+  };
+  const out = { map: makeCanvasTexture(size, (g) => draw(g, false)), bump: makeBumpTexture(size, (g) => draw(g, true)) };
+  cache.set('cardboard', out);
+  return out;
+}

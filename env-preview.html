@@ -9,6 +9,8 @@
       import { ACESFilmicToneMapping, Fog, PerspectiveCamera, PMREMGenerator, Scene, WebGLRenderer } from 'three';
       import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
       import { buildGarden } from '/src/env/garden.ts';
+      import { buildWorkshop } from '/src/env/workshop.ts';
+      import { buildCove } from '/src/env/cove.ts';
       import { buildRobot } from '/src/companion/body.ts';
       import { applyPose } from '/src/companion/rig.ts';
       import { POSES } from '/src/companion/poses.ts';
@@ -27,15 +29,15 @@
       scene.environment = new PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
       scene.environmentIntensity = 0.35;
 
-      const builders = { garden: buildGarden };
+      const builders = { garden: buildGarden, workshop: buildWorkshop, cove: buildCove };
       const place = (builders[q.get('place') ?? 'garden'] ?? buildGarden)();
       scene.add(place.root);
       scene.background = place.sky;
-      scene.fog = new Fog(place.sky.getHex(), 18, 140);
+      scene.fog = new Fog(place.sky.getHex(), place.fog?.[0] ?? 18, place.fog?.[1] ?? 140);
 
       const robot = buildRobot();
       robot.root.scale.setScalar(0.36);
-      robot.root.position.set(num('rx', place.spawn.x), 0, num('rz', place.spawn.z - 1.0));
+      robot.root.position.set(num('rx', place.spawn.x), num('rY', place.spawn.y ?? 0), num('rz', place.spawn.z - 1.0));
       robot.root.rotation.y = num('ry', Math.PI);
       scene.add(robot.root);
       const pose = POSES[q.get('pose') ?? 'stand'] ?? POSES.stand;
@@ -44,7 +46,7 @@
       else applyLook(robot.root, { paint: [] });
 
       const camera = new PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 400);
-      camera.position.set(num('x', place.spawn.x), num('y', 1.6), num('z', place.spawn.z));
+      camera.position.set(num('x', place.spawn.x), num('y', 1.6) + (place.spawn.y ?? 0), num('z', place.spawn.z));
       camera.rotation.order = 'YXZ';
       camera.rotation.y = num('yaw', place.spawn.yaw);
       camera.rotation.x = num('pitch', -0.12);

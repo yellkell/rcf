@@ -37,6 +37,8 @@ export interface Place {
   /** Indices into PAINT.colours — the tones this place is painted in. */
   palette: number[];
   sky: Color;
+  /** Fog near/far (m); indoors wants it far away. */
+  fog?: [number, number];
   /** Anything that breathes: leaves, water, a flag. Cheap, please. */
   update?(delta: number, time: number): void;
   dispose?(): void;

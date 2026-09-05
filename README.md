@@ -20,7 +20,7 @@ the paint second, the seeking third) and how it is meant to feel.
 | Thumbstick **back** | Shuffle half a metre back |
 | **A** (right) / **X** (left), held | The pose wheel above the robot — point at a wedge, let go: FOLLOW · STAND · SIT · LIE · CROUCH · FLATTEN · CLING · PERISCOPE |
 | **Grip** with the controller on the robot | Pick it up; release over a floor to set it down, against a wall or ceiling to stick it there |
-| **B** (right) / **Y** (left) | Open THE TRAY beside the robot (kinds + colours, this place's own tones first); tap a swatch to take a unit into your hand. With a unit held: drop it |
+| **B** (right) / **Y** (left) | Open THE TRAY beside the robot (kinds + colours, this place's own tones first); tap a swatch to take a unit into your hand. With a unit held: drop it. The tray's NEXT PLACE button walks the places |
 | **Trigger** on the robot, unit held | Place the unit (the ghost under the ray is where it lands) |
 | **Trigger** on placed paint, empty hand | Lift it back into your hand |
 | Thumbstick while a unit hovers the robot | x twists, y sizes, grip + y sets a stripe's width |
@@ -57,8 +57,10 @@ src/
     paint.ts                 Look model, 8-byte wire, THE HAND, the canvas bake
   env/
     place.ts                 the Place contract every environment meets
-    garden.ts                THE WALLED GARDEN — the first place
-    kit/                     merge, rng+noise, skins, canvas painters, sky, plants, scatter
+    garden.ts                THE WALLED GARDEN — brick walls, beds, a greenhouse, a pond
+    workshop.ts              THE WORKSHOP — a lock-up garage: bench, racking, drums, a car under a sheet
+    cove.ts                  THE COVE — a rocky beach: heightfield sand, tide pools, a groyne, a boat
+    kit/                     merge, rng+noise, skins, canvas painters, sky, plants, scatter, terrain
   ui/panel.ts                canvas panels with buttons you point at
   input/rays.ts              controller rays + the pointer visual
 env-preview.html             dev harness: ?place=&pose=&x=&z=&yaw= (tools/env-shots.mjs)

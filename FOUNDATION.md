@@ -58,6 +58,18 @@ everything, the places.
   place, squeeze to lift, B to return. The bay is a mode on the companion
   itself: you paint it where it stands, in the light it will hide in.
 
+## The places so far
+
+1. **THE WALLED GARDEN** — a kitchen garden on a late summer afternoon:
+   brick walls with ivy, a flagstone path round a lawn, raised beds, a
+   tree, a lean-to greenhouse, a pond, a bench, a compost bin.
+2. **THE WORKSHOP** — a lock-up garage on a bright morning: one window
+   throwing a block of sun, a bench under a pegboard, steel racking, oil
+   drums, tyres, a car under a dust sheet, a ceiling to cling to.
+3. **THE COVE** — a rocky beach at low tide: heightfield sand down to a
+   slow sea, a shelf of rock with tide pools, boulders, a groyne into the
+   water, a rowing boat, a cliff at your back, a lighthouse on the head.
+
 ## The character
 
 THE LITTLE GUY: FIRE FIGHT 2's blank, with legs. The egg head and the one
