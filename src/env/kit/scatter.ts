@@ -17,8 +17,9 @@ export function trs(x: number, y: number, z: number, sx: number, sy: number, sz:
 }
 
 export interface ScatterOpts {
-  /** Half-extent of the square to fill. */
+  /** Half-extent across x (and z, unless halfZ is given). */
   half: number;
+  halfZ?: number;
   /** Centre of the square. */
   cx?: number;
   cz?: number;
@@ -41,7 +42,7 @@ export function scatter(n: number, o: ScatterOpts, make: (rng: () => number, i: 
   for (let i = 0; i < n && tries < n * 40; ) {
     tries++;
     const x = cx + (o.rng() * 2 - 1) * o.half;
-    const z = cz + (o.rng() * 2 - 1) * o.half;
+    const z = cz + (o.rng() * 2 - 1) * (o.halfZ ?? o.half);
     if (o.clear && Math.hypot(x - cx, z - cz) < o.clear) continue;
     if (o.ok && !o.ok(x, z)) continue;
     if (o.spacing && placed.some(([px, pz]) => Math.hypot(px - x, pz - z) < o.spacing!)) continue;

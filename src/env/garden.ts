@@ -34,7 +34,7 @@ import {
 } from 'three';
 import { collapseStatic } from './kit/merge.js';
 import { makeRng } from './kit/paper.js';
-import { conifer, fern, flowers, grassTuft, ivy, mossCushion, shrub, tree, grassTuft as tuft } from './kit/plants.js';
+import { conifer, fern, flowers, grassTuft, ivy, lumpGeometry, mossCushion, shrub, tree, grassTuft as tuft } from './kit/plants.js';
 import { put, scatter } from './kit/scatter.js';
 import { rockMat, woodMat } from './kit/skins.js';
 import { clouds, skyDome, sunDisc } from './kit/sky.js';
@@ -126,22 +126,26 @@ export function buildGarden(): Place {
         ball.position.set(s * 0.95, WALL_H + 0.5, 0);
         g.add(ball);
       }
-      // A wrought gate, standing open.
+      // A wrought gate hung on the right pier, standing half open inward.
       const iron = new MeshStandardMaterial({ color: 0x1d2024, roughness: 0.55, metalness: 0.8 });
       const gateG = new Group();
-      for (let i = 0; i < 7; i++) {
+      for (let i = 0; i <= 7; i++) {
         const bar = new Mesh(new CylinderGeometry(0.014, 0.014, 1.9, 6), iron);
-        bar.position.set(-0.6 + i * 0.2, 0.95, 0);
+        bar.position.set(-i * 0.19, 0.95, 0);
         gateG.add(bar);
+        if (i % 2 === 0) {
+          const tip = new Mesh(new SphereGeometry(0.025, 6, 5), iron);
+          tip.position.set(-i * 0.19, 1.92, 0);
+          gateG.add(tip);
+        }
       }
-      for (const y of [0.25, 1.05, 1.75]) {
-        const rail = new Mesh(new BoxGeometry(1.3, 0.03, 0.03), iron);
-        rail.position.set(0, y, 0);
+      for (const y of [0.25, 1.05, 1.7]) {
+        const rail = new Mesh(new BoxGeometry(1.4, 0.035, 0.035), iron);
+        rail.position.set(-0.665, y, 0);
         gateG.add(rail);
       }
-      gateG.position.set(-0.65, 0, 0.1);
-      gateG.rotation.y = -1.1;
-      gateG.position.x += 0.65 * Math.cos(-1.1) - 0.65;
+      gateG.position.set(0.66, 0, 0);
+      gateG.rotation.y = -1.15;
       g.add(gateG);
     } else {
       const seg = new Mesh(new BoxGeometry(len, WALL_H, 0.36), brickMat);
@@ -170,6 +174,38 @@ export function buildGarden(): Place {
   const ivyN = ivy(rng, 3.5, 2.3, 600, 0x35552f);
   ivyN.position.set(-4.6, 0, -D / 2 + 0.19);
   statics.add(ivyN);
+
+  /* ── beyond the walls: hedgerows, a few tall trees, low hills ────── */
+  {
+    const far = new Group();
+    const hillMat = new MeshStandardMaterial({ color: 0x5d7a3e, roughness: 1, envMapIntensity: 0.2 });
+    for (let i = 0; i < 9; i++) {
+      const a = (i / 9) * Math.PI * 2 + rng() * 0.5;
+      const rr = 55 + rng() * 40;
+      const hill = new Mesh(lumpGeometry(rng, 1, 0.12), hillMat);
+      const sx = 30 + rng() * 40;
+      hill.scale.set(sx, 6 + rng() * 9, sx * (0.6 + rng() * 0.5));
+      hill.position.set(Math.cos(a) * rr, -2.5, Math.sin(a) * rr);
+      hill.rotation.y = rng() * 6;
+      far.add(hill);
+    }
+    const hedgeMat = new MeshStandardMaterial({ color: 0x2f4a2a, roughness: 1, envMapIntensity: 0.2 });
+    for (let i = 0; i < 44; i++) {
+      const a = (i / 44) * Math.PI * 2 + rng() * 0.12;
+      const rr = 14 + rng() * 9;
+      const lump = new Mesh(lumpGeometry(rng, 1, 0.2), hedgeMat);
+      const sx = 2.2 + rng() * 2.6;
+      lump.scale.set(sx, 1.4 + rng() * 1.6, sx);
+      lump.position.set(Math.cos(a) * rr, 0.2, Math.sin(a) * rr);
+      far.add(lump);
+    }
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2 + rng();
+      const rr = 12 + rng() * 10;
+      put(tree(rng, 6 + rng() * 4, i % 2 ? 0x35602f : 0x4a7a38), Math.cos(a) * rr, Math.sin(a) * rr, rng() * 6, flat, far);
+    }
+    statics.add(far);
+  }
 
   /* ── the raised beds ─────────────────────────────────────────────── */
   const edgeMat = surfaced(limestone(), { repeat: [4, 1], roughness: 0.85, color: 0xcfc4ac });
@@ -203,14 +239,14 @@ export function buildGarden(): Place {
   };
   // Bed 1: ferns and hostas under the tree's side.
   bed(-4.6, 2.2, 2.6, 1.4, 0, (into, r) => {
-    scatter(7, { half: 1.1, ground: flat, rng: r, spacing: 0.4 }, (rr) => fern(rr, 0.45 + rr() * 0.2, 0x4c7a3a), into);
-    scatter(4, { half: 1.0, ground: flat, rng: r, spacing: 0.3 }, (rr) => shrub(rr, 0.35, 0x5a7d47), into);
+    scatter(7, { half: 1.05, halfZ: 0.45, ground: flat, rng: r, spacing: 0.4 }, (rr) => fern(rr, 0.45 + rr() * 0.2, 0x4c7a3a), into);
+    scatter(4, { half: 1.0, halfZ: 0.4, ground: flat, rng: r, spacing: 0.3 }, (rr) => shrub(rr, 0.35, 0x5a7d47), into);
   });
   // Bed 2: lavender-ish mounds and tall grasses.
   bed(4.6, 2.4, 2.6, 1.4, 0, (into, r) => {
-    scatter(6, { half: 1.1, ground: flat, rng: r, spacing: 0.4 }, (rr) => shrub(rr, 0.4, 0x6f7d5a), into);
-    scatter(8, { half: 1.15, ground: flat, rng: r, spacing: 0.25 }, (rr) => grassTuft(rr, 0.55 + rr() * 0.3, 0x7a8c46), into);
-    scatter(5, { half: 1.0, ground: flat, rng: r }, (rr) => flowers(rr, 0xb06bff, 6, 0.4), into);
+    scatter(6, { half: 1.05, halfZ: 0.45, ground: flat, rng: r, spacing: 0.4 }, (rr) => shrub(rr, 0.4, 0x6f7d5a), into);
+    scatter(8, { half: 1.1, halfZ: 0.5, ground: flat, rng: r, spacing: 0.25 }, (rr) => grassTuft(rr, 0.55 + rr() * 0.3, 0x7a8c46), into);
+    scatter(5, { half: 1.0, halfZ: 0.45, ground: flat, rng: r }, (rr) => flowers(rr, 0xb06bff, 6, 0.4), into);
   });
   // Bed 3: the vegetable bed along the north path — rows of leaf.
   bed(1.2, -4.0, 4.2, 1.3, 0, (into, r) => {
@@ -219,7 +255,7 @@ export function buildGarden(): Place {
       g.position.set(-1.8 + i * 0.45, 0, (i % 2) * 0.5 - 0.25);
       into.add(g);
     }
-    scatter(4, { half: 1.6, ground: flat, rng: r }, (rr) => flowers(rr, 0xffb02e, 5, 0.45), into);
+    scatter(4, { half: 1.7, halfZ: 0.4, ground: flat, rng: r }, (rr) => flowers(rr, 0xffb02e, 5, 0.45), into);
   });
 
   /* ── the tree, the conifers, the shrubbery ───────────────────────── */
@@ -459,27 +495,43 @@ export function buildGarden(): Place {
     logs.rotation.y = Math.PI / 2;
     put(logs, -W / 2 + 0.55, 3.6, Math.PI / 2, flat, stick);
 
-    // Wheelbarrow, tipped up against the north wall.
+    // Wheelbarrow by the north wall: a tub over a front wheel, two legs at
+    // the back, two long handles reaching behind.
     const barrow = new Group();
     const tin = new MeshStandardMaterial({ color: 0x4a7f8c, roughness: 0.55, metalness: 0.5, envMapIntensity: 0.8 });
-    const tub = new Mesh(new BoxGeometry(0.62, 0.3, 0.9), tin);
-    tub.position.y = 0.42;
+    const tubH = 0.28;
+    const tubY = 0.3;
+    const tub = new Mesh(new BoxGeometry(0.62, tubH, 0.85), tin);
+    tub.position.set(0, tubY + tubH / 2, 0);
     tub.castShadow = true;
     barrow.add(tub);
-    const wheel = new Mesh(new TorusGeometry(0.17, 0.045, 8, 16), iron);
+    const tubLip = new Mesh(new BoxGeometry(0.7, 0.03, 0.93), tin);
+    tubLip.position.set(0, tubY + tubH, 0);
+    barrow.add(tubLip);
+    const wheel = new Mesh(new TorusGeometry(0.15, 0.045, 8, 16), iron);
     wheel.rotation.y = Math.PI / 2;
-    wheel.position.set(0, 0.17, -0.55);
+    wheel.position.set(0, 0.195, -0.5);
     barrow.add(wheel);
+    const hub = new Mesh(new CylinderGeometry(0.05, 0.05, 0.08, 8), iron);
+    hub.rotation.z = Math.PI / 2;
+    hub.position.copy(wheel.position);
+    barrow.add(hub);
+    const ash = woodMat(0xb8b0a0);
     for (const s of [-1, 1]) {
-      const arm = new Mesh(new BoxGeometry(0.04, 0.04, 1.4), woodMat(0xb8b0a0));
-      arm.position.set(s * 0.28, 0.32, 0.15);
-      arm.rotation.x = 0.12;
-      barrow.add(arm);
-      const leg = new Mesh(new BoxGeometry(0.04, 0.3, 0.04), iron);
-      leg.position.set(s * 0.26, 0.15, 0.4);
+      const handle = new Mesh(new BoxGeometry(0.045, 0.045, 1.35), ash);
+      handle.position.set(s * 0.26, tubY - 0.03, 0.2);
+      handle.rotation.x = -0.12;
+      handle.castShadow = true;
+      barrow.add(handle);
+      const leg = new Mesh(new BoxGeometry(0.04, tubY, 0.04), iron);
+      leg.position.set(s * 0.26, tubY / 2, 0.32);
       barrow.add(leg);
+      const strut = new Mesh(new BoxGeometry(0.03, 0.03, 0.6), iron);
+      strut.position.set(s * 0.26, 0.08, -0.05);
+      strut.rotation.x = 0.35;
+      barrow.add(strut);
     }
-    put(barrow, -1.6, -D / 2 + 0.9, 0.5, flat, stick);
+    put(barrow, -1.6, -D / 2 + 1.1, 0.6, flat, stick);
 
     // Birdbath on the lawn.
     const bath = new Group();
@@ -497,6 +549,80 @@ export function buildGarden(): Place {
     bathWater.position.y = 0.79;
     bath.add(bathWater);
     put(bath, 0.4, 0.8, 0, flat, stick);
+  }
+
+  /* ── odds and ends to hide behind ────────────────────────────────── */
+  {
+    const slat = surfaced(planks(), { repeat: [1, 0.5], roughness: 0.95, color: 0x9a8a72 });
+    // A compost bin in the north-east corner: slatted, open-topped, heaped.
+    const bin = new Group();
+    for (const [x, z, ry] of [
+      [0, -0.5, 0],
+      [0, 0.5, 0],
+      [-0.5, 0, Math.PI / 2],
+      [0.5, 0, Math.PI / 2],
+    ]) {
+      for (let i = 0; i < 5; i++) {
+        const b = new Mesh(new BoxGeometry(1.0, 0.13, 0.03), slat);
+        b.position.set(x, 0.1 + i * 0.17, z);
+        b.rotation.y = ry;
+        b.castShadow = true;
+        bin.add(b);
+      }
+    }
+    for (const [x, z] of [
+      [-0.5, -0.5],
+      [0.5, -0.5],
+      [-0.5, 0.5],
+      [0.5, 0.5],
+    ]) {
+      const post = new Mesh(new BoxGeometry(0.06, 0.95, 0.06), slat);
+      post.position.set(x, 0.475, z);
+      bin.add(post);
+    }
+    const heap = new Mesh(lumpGeometry(rng, 1, 0.2), surfaced(soil(), { repeat: [2, 2], roughness: 1, color: 0x8a7a66 }));
+    heap.scale.set(0.46, 0.3, 0.46);
+    heap.position.y = 0.72;
+    bin.add(heap);
+    put(bin, W / 2 - 0.9, -D / 2 + 0.9, 0.1, flat, stick);
+
+    // A rain barrel at the greenhouse's end, a bucket beside it.
+    const barrelMat = surfaced(planks(), { repeat: [4, 1], roughness: 0.9, color: 0x7a6a56 });
+    const barrel = new Mesh(new CylinderGeometry(0.3, 0.27, 0.9, 16), barrelMat);
+    barrel.position.y = 0.45;
+    barrel.castShadow = true;
+    const barrelG = new Group();
+    barrelG.add(barrel);
+    for (const y of [0.15, 0.75]) {
+      const hoop = new Mesh(new TorusGeometry(0.305, 0.012, 6, 24), new MeshStandardMaterial({ color: 0x2a2d31, roughness: 0.5, metalness: 0.8 }));
+      hoop.rotation.x = Math.PI / 2;
+      hoop.position.y = y;
+      barrelG.add(hoop);
+    }
+    const barrelWater = new Mesh(new CircleGeometry(0.28, 16), new MeshStandardMaterial({ color: 0x24403f, roughness: 0.05, metalness: 0.3, envMapIntensity: 1.4 }));
+    barrelWater.rotation.x = -Math.PI / 2;
+    barrelWater.position.y = 0.86;
+    barrelG.add(barrelWater);
+    put(barrelG, 5.4, -D / 2 + 0.55, 0, flat, stick);
+    const zinc = new MeshStandardMaterial({ color: 0x8a949c, roughness: 0.45, metalness: 0.85, envMapIntensity: 1 });
+    const bucket = new Mesh(new CylinderGeometry(0.15, 0.12, 0.3, 12, 1, true), zinc);
+    bucket.material.side = 2;
+    bucket.position.y = 0.15;
+    bucket.castShadow = true;
+    put(bucket, 4.8, -D / 2 + 0.7, 0.3, flat, stick);
+
+    // Crates stacked by the log pile, one on its side.
+    const crateMat = surfaced(planks(), { repeat: [1, 1], roughness: 0.95, color: 0xb8a686 });
+    const crate = (x: number, y: number, z: number, ry: number, rx = 0): void => {
+      const c = new Mesh(new BoxGeometry(0.5, 0.36, 0.38), crateMat);
+      c.position.set(x, y, z);
+      c.rotation.set(rx, ry, 0);
+      c.castShadow = true;
+      stick.add(c);
+    };
+    crate(-W / 2 + 0.6, 0.18, 5.0, 0.2);
+    crate(-W / 2 + 0.62, 0.54, 5.02, -0.15);
+    crate(-W / 2 + 1.25, 0.19, 5.2, 1.2);
   }
 
   /* ── the merge ───────────────────────────────────────────────────── */
